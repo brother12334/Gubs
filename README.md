@@ -7,7 +7,7 @@ Play it in the browser with 2-6 players: friends, bots, or both.
 - A server enforces the full rules: all 70 cards, Interrupts on other players' turns, Events, Letters and tiebreaks
 - Interrupt windows: when someone plays a Hazard or Trap, anyone holding a Feather, Blindfold or Cricket Song gets a prompt to cancel it. Flop Boat and Age-Old Cure prompts appear when Events are drawn.
 - Reconnects automatically if you refresh. If a player stays disconnected, a bot plays their turns until they return.
-- Tabletop look inspired by Pokémon TCG Online: a 3D playmat on a wooden table, player nameplates, and a big spotlight whenever a card is played
+- 3D tabletop: a playmat on a wooden table, player nameplates, and a big spotlight whenever a card is played
 - Works on desktop and phones; includes game log and chat
 
 ## Run it

@@ -31,19 +31,19 @@ button, input { font: inherit; }
 a { color: var(--gold); }
 
 .btn {
-  border: 2px solid #0c2c52;
-  background: linear-gradient(#4aa3ee, #1f62a8);
+  border: 2px solid #142c16;
+  background: linear-gradient(#6aa552, #2f5f2a);
   color: #fff;
   padding: 10px 16px;
   border-radius: 10px;
   cursor: pointer;
   font-weight: 800;
   text-shadow: 0 1px 1px rgba(0, 0, 0, .45);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .35), 0 3px 0 #0c2c52, 0 6px 12px rgba(0, 0, 0, .35);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .3), 0 3px 0 #142c16, 0 6px 12px rgba(0, 0, 0, .35);
   transition: transform .08s, filter .15s, box-shadow .08s;
 }
 .btn:hover { filter: brightness(1.1); }
-.btn:active { transform: translateY(2px); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .35), 0 1px 0 #0c2c52, 0 3px 6px rgba(0, 0, 0, .35); }
+.btn:active { transform: translateY(2px); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .3), 0 1px 0 #142c16, 0 3px 6px rgba(0, 0, 0, .35); }
 .btn:disabled { opacity: .5; cursor: default; filter: grayscale(.4); }
 .btn.gold {
   background: linear-gradient(#ffd963, #f39a1e); color: #3a1d00; border-color: #7a3d06; text-shadow: 0 1px 0 rgba(255, 255, 255, .5);
@@ -135,7 +135,7 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
 }
 .turn-info {
   margin-left: auto; color: #fff; font-weight: 700; padding: 6px 14px; border-radius: 99px;
-  background: linear-gradient(#1f62a8, #123e6c); border: 2px solid #0b2747; box-shadow: 0 3px 8px rgba(0, 0, 0, .4);
+  background: linear-gradient(#2e5233, #18301c); border: 2px solid #0d1c10; box-shadow: 0 3px 8px rgba(0, 0, 0, .4);
 }
 .turn-info b { color: #ffd963; }
 
@@ -143,7 +143,7 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
 .opp-row { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; padding: 6px 12px 8px; z-index: 4; }
 .plate {
   position: relative; display: flex; align-items: center; gap: 9px; padding: 5px 12px 5px 5px; color: #fff;
-  background: linear-gradient(#3b8fdc, #1a4f8a); border: 2px solid #0b2747; border-radius: 12px;
+  background: linear-gradient(#4b7a3f, #24452a); border: 2px solid #0d1c10; border-radius: 12px;
   box-shadow: inset 0 2px 0 rgba(255, 255, 255, .3), 0 4px 10px rgba(0, 0, 0, .5);
   transition: box-shadow .2s, transform .2s;
 }
@@ -172,10 +172,10 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
   display: grid; grid-template-rows: minmax(0, 1fr) auto minmax(0, 1.15fr); gap: 8px; padding: 14px;
   border-radius: 18px;
   background:
-    linear-gradient(transparent calc(50% - 30px), rgba(255, 255, 255, .14) calc(50% - 30px) calc(50% + 30px), transparent calc(50% + 30px)),
-    radial-gradient(ellipse 80% 70% at 50% 50%, #45b2f5, #1b78cf 60%, #0f5aa6);
-  border: 10px solid #133d68;
-  box-shadow: 0 0 0 4px #081f38, inset 0 0 0 3px rgba(140, 210, 255, .55), inset 0 0 60px rgba(0, 20, 60, .45), 0 40px 70px rgba(0, 0, 0, .7);
+    linear-gradient(transparent calc(50% - 30px), rgba(255, 236, 170, .1) calc(50% - 30px) calc(50% + 30px), transparent calc(50% + 30px)),
+    radial-gradient(ellipse 80% 70% at 50% 50%, #5e9a4c, #36703a 60%, #24512a);
+  border: 10px solid #4a2e17;
+  box-shadow: 0 0 0 4px #24150a, inset 0 0 0 3px rgba(231, 184, 67, .55), inset 0 0 60px rgba(10, 30, 10, .5), 0 40px 70px rgba(0, 0, 0, .7);
 }
 .opp-zones { display: grid; grid-template-columns: repeat(var(--n, 1), minmax(0, 1fr)); gap: 8px; min-height: 0; --card-w: 66px; --card-h: 92px; }
 .my-zone { display: grid; min-height: 0; --card-w: 92px; --card-h: 128px; }
@@ -183,7 +183,7 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
   position: relative; min-height: 0; overflow: auto; padding: 22px 10px 8px; border-radius: 12px;
   border: 3px solid transparent;
   background:
-    linear-gradient(#2d4458, #1d3043) padding-box,
+    linear-gradient(#2a3f2c, #18291b) padding-box,
     repeating-linear-gradient(90deg, #f2cf4a 0 54px, rgba(242, 207, 74, .15) 54px 70px) border-box;
   box-shadow: inset 0 3px 12px rgba(0, 0, 0, .5);
   transition: box-shadow .2s;
@@ -200,37 +200,33 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
 
 /* centre line: discard, GUBS emblem with the G-U-B letters, deck */
 .mat-mid { display: flex; align-items: center; justify-content: space-between; padding: 0 6%; --card-w: 62px; --card-h: 87px; }
-.slot { display: grid; justify-items: center; gap: 3px; padding: 6px; border-radius: 10px; background: rgba(8, 40, 80, .35); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .25); }
+.slot { display: grid; justify-items: center; gap: 3px; padding: 6px; border-radius: 10px; background: rgba(15, 35, 15, .4); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .25); }
 .slot-label { font-size: 12px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
 .slot .card.back { box-shadow: 2px 2px 0 #3d2a10, 4px 4px 0 #2d1f0b, 6px 6px 10px rgba(0, 0, 0, .5); }
 #discardTop { cursor: zoom-in; }
 .emblem {
-  width: 132px; height: 132px; border-radius: 50%; display: grid; place-items: center; position: relative;
-  background:
-    radial-gradient(circle at 34% 24%, #fff 0 7px, transparent 8px),
-    radial-gradient(circle at 64% 17%, #fff 0 9px, transparent 10px),
-    radial-gradient(circle at 78% 34%, #fff 0 5px, transparent 6px),
-    radial-gradient(circle at 20% 38%, #fff 0 4px, transparent 5px),
-    linear-gradient(#e2412b 0 44%, #1c1c1c 44% 56%, #f4ead2 56%);
-  border: 5px solid #1c1c1c; box-shadow: 0 6px 18px rgba(0, 0, 0, .5), inset 0 -8px 16px rgba(0, 0, 0, .25);
+  width: 132px; height: 132px; border-radius: 50%; display: grid; place-items: end center; padding-bottom: 14px; position: relative;
+  background: url('cards/back.jpg') 50% 45% / 150% auto;
+  border: 5px solid #d6a73a;
+  box-shadow: 0 0 0 3px #5a3a0e, 0 6px 18px rgba(0, 0, 0, .55), inset 0 0 22px rgba(0, 0, 0, .55);
 }
-.letters { display: flex; gap: 4px; padding: 5px 7px; border-radius: 12px; background: #1c1c1c; box-shadow: 0 0 0 3px #f4ead2; }
+.letters { display: flex; gap: 4px; padding: 4px 6px; border-radius: 10px; background: rgba(36, 21, 10, .9); box-shadow: 0 0 0 2px #d6a73a; }
 .letter {
   width: 24px; height: 30px; display: grid; place-items: center; border-radius: 5px;
   font-family: 'IM Fell English SC', serif; font-size: 20px; font-weight: 800;
-  background: #3a3a3a; color: rgba(255, 255, 255, .25);
+  background: rgba(255, 255, 255, .08); color: rgba(255, 255, 255, .3);
 }
-.letter.on { background: linear-gradient(#fff3c4, #f0a93a); color: #1c1c1c; box-shadow: 0 0 12px rgba(255, 200, 70, .9); }
+.letter.on { background: linear-gradient(#fff3c4, #f0a93a); color: #24150a; box-shadow: 0 0 12px rgba(255, 200, 70, .9); }
 
 /* status message (left) and action buttons (right) */
 .banner {
   position: absolute; left: 16px; bottom: 136px; width: 270px; z-index: 6;
   padding: 12px 14px; border-radius: 14px; text-align: center; color: #fff; font-weight: 700; line-height: 1.35;
-  background: linear-gradient(rgba(31, 98, 168, .95), rgba(14, 50, 92, .95)); border: 2px solid #0b2747;
+  background: linear-gradient(rgba(46, 82, 51, .96), rgba(24, 48, 28, .96)); border: 2px solid #0d1c10;
   box-shadow: inset 0 2px 0 rgba(255, 255, 255, .25), 0 8px 20px rgba(0, 0, 0, .5);
 }
 .banner .big { font-family: 'IM Fell English SC', serif; font-size: 22px; color: #ffd963; display: block; text-shadow: 0 2px 0 rgba(0, 0, 0, .4); }
-.banner .muted { color: #c9def3; }
+.banner .muted { color: #cfe0c4; }
 .timer { height: 5px; background: rgba(0, 0, 0, .35); border-radius: 4px; margin-top: 8px; overflow: hidden; }
 .timer i { display: block; height: 100%; background: #ffd963; transition: width .25s linear; }
 .controls {
@@ -333,12 +329,12 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
 .side {
   position: fixed; right: 0; top: 0; bottom: 0; width: min(330px, 88vw); z-index: 40;
   display: grid; grid-template-rows: auto 1fr auto auto auto; min-height: 0;
-  background: linear-gradient(#173f6b, #0d2747); border-left: 3px solid #081f38; color: #fff;
+  background: linear-gradient(#24402a, #142516); border-left: 3px solid #0d1c10; color: #fff;
   transform: translateX(100%); transition: transform .22s; box-shadow: -10px 0 40px rgba(0, 0, 0, .6);
 }
 .side.open { transform: none; }
 .side-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; font-weight: 900; color: #ffd963; border-bottom: 1px solid rgba(255, 255, 255, .1); }
-.log { list-style: none; margin: 0; padding: 8px 12px; overflow-y: auto; font-size: 13px; line-height: 1.4; color: #c9def3; }
+.log { list-style: none; margin: 0; padding: 8px 12px; overflow-y: auto; font-size: 13px; line-height: 1.4; color: #cfe0c4; }
 .log li { padding: 3px 0; border-bottom: 1px dashed rgba(255, 255, 255, .08); }
 .log li:last-child { color: #fff; }
 .chat { height: 140px; overflow-y: auto; padding: 6px 12px; font-size: 13px; }
@@ -349,11 +345,11 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
 /* modal & menus */
 .modal { position: fixed; inset: 0; background: rgba(0, 0, 0, .6); display: grid; place-items: center; z-index: 50; padding: 16px; }
 .modal-box {
-  background: linear-gradient(#1f5d99, #10355f); border: 3px solid #081f38; border-radius: 16px; padding: 20px; color: #fff;
+  background: linear-gradient(#2e5233, #172d1b); border: 3px solid #0d1c10; border-radius: 16px; padding: 20px; color: #fff;
   width: min(560px, 100%); max-height: 90vh; overflow: auto; box-shadow: 0 30px 80px rgba(0, 0, 0, .6);
 }
 .modal-box h3 { font-family: 'IM Fell English SC', serif; font-size: 26px; margin: 0 0 6px; color: #ffd963; text-shadow: 0 2px 0 rgba(0, 0, 0, .4); }
-.modal-box .muted, .modal-box p { color: #d6e6f7; }
+.modal-box .muted, .modal-box p { color: #d8e6cf; }
 .modal-box .cards { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 12px 0; }
 .modal-box .opts { display: grid; gap: 8px; margin-top: 12px; }
 .modal-box .opts .btn { text-align: left; }
