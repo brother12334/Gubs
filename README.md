@@ -50,10 +50,10 @@ To play with friends over the internet, deploy to any Node host that supports We
 The printed card guide wasn't available, so a few calls are based on the card text:
 - When you draw an Event or a Letter, it takes effect and you then draw a replacement card.
 - Barricades only protect your own Free Gubs. Traps and Lures only affect Free Gubs. The Esteemed Elder can't be barricaded, trapped, lured, stolen, retreated, flooded or speared.
-- Smahl Thief steals a whole Gub stack, together with any Barricade or Sud Spout on it.
-- Retreat takes back your untrapped Gubs together with their Barricades.
+- Smahl Thief steals a Gub together with its Barricade; a Sud Spout on it is discarded, so the Gub arrives Free.
+- Retreat takes any or all cards on your side back into your hand, including Sud Spouts opponents played there and your Rings with their Gubs.
 - Traveling Merchant: each player keeps one card and passes the rest to the player on their right, the previous player in turn order.
-- Flop Boat can't stop Letter cards.
+- Letters count as Events: Flop Boat can send one back into the deck, even the third, so the game goes on.
 - Interrupts can't be interrupted.
 
 ## Project layout

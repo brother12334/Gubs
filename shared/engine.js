@@ -212,7 +212,7 @@
           break;
         case 'retreat':
           add('retreat', 'Take cards on your side back into your hand', 'stacks',
-            p.field.filter((s) => s.kind === 'gub' && !s.spout && !Game.isElder(s)).map((s) => s.id), { min: 1 });
+            p.field.filter((s) => !Game.isElder(s)).map((s) => s.id), { min: 1 });
           break;
         case 'age_old_cure':
           if (this.discard.some((c) => c.key === 'gub')) add('cure', 'Take a Gub from the discard pile', 'none', []);
@@ -270,10 +270,14 @@
         const c = this.deck.shift();
         const def = CARDS[c.key];
         if (def.type === 'letter') {
-          this.letters.push(c);
           this.spotlight(p.id, c, null, `Letter ${def.name}!`);
-          this.addLog(`${p.name} draws the letter ${def.name}! (${this.letters.length}/3)`);
-          if (this.letters.length >= 3) { this.endGame(); return; }
+          this.addLog(`${p.name} draws the letter ${def.name}!`);
+          // Letters are Events: a Flop Boat can send one back before it counts (even the third).
+          if (this.players.some((q) => q.hand.some((x) => x.key === 'flop_boat' || x.key === 'cricket_song'))) {
+            this.openEvent(p, c);
+            return;
+          }
+          if (this.resolveLetter(c)) return;
           continue; // draw a replacement
         }
         if (def.type === 'event') {
@@ -390,6 +394,7 @@
         }
         case 'steal':
           this.removeStack(st.owner, st.stack);
+          if (st.stack.spout) { this.discard.push(st.stack.spout); st.stack.spout = null; } // the Gub comes away Free
           p.field.push(st.stack);
           discardCard();
           break;
@@ -444,8 +449,8 @@
         case 'retreat':
           for (const id of targets) {
             const x = this.findStack(id);
-            if (x.stack.barricade) p.hand.push(x.stack.barricade);
-            p.hand.push(x.stack.gub);
+            if (x.stack.kind === 'ring') p.hand.push(x.stack.ring, ...x.stack.gubs);
+            else p.hand.push(...[x.stack.gub, x.stack.barricade, x.stack.spout].filter(Boolean));
             this.removeStack(p, x.stack);
           }
           discardCard();
@@ -525,10 +530,22 @@
       this.drawFor(drawer);
     }
 
+    // Counts a drawn letter; returns true if it ended the game.
+    resolveLetter(c) {
+      this.letters.push(c);
+      this.addLog(`The letter ${CARDS[c.key].name} counts (${this.letters.length}/3).`);
+      if (this.letters.length >= 3) { this.endGame(); return true; }
+      return false;
+    }
+
     resolveEvent() {
       const { card, drawer } = this.pending;
       const d = this.player(drawer);
       this.pending = null;
+      if (CARDS[card.key].type === 'letter') {
+        if (!this.resolveLetter(card)) this.drawFor(d);
+        return;
+      }
       const now = this.now();
       switch (card.key) {
         case 'traveling_merchant': {

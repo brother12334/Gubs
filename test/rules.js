@@ -124,6 +124,34 @@ const tests = {
     assert.strictEqual(g.phase, 'over');
     assert.deepStrictEqual(g.result.winners, ['p1'], 'fewest cards in hand wins the tie');
   },
+  'Flop Boat can stop the third letter'() {
+    const g = fresh(3);
+    g.letters = [g.card('letter_g'), g.card('letter_u')];
+    g.deck = g.deck.filter((c) => !c.key.startsWith('letter_'));
+    g.deck.unshift(g.card('letter_b'));
+    const fb = give(g, 'p2', 'flop_boat');
+    g.act('p0', { type: 'draw' });
+    assert.strictEqual(g.pending.kind, 'event');
+    g.act('p2', { type: 'react', cardId: fb.id });
+    assert.notStrictEqual(g.phase, 'over');
+    assert.strictEqual(g.letters.length, 2);
+    assert(g.deck.some((c) => c.key === 'letter_b'), 'letter went back into the deck');
+  },
+  'Smahl Thief takes a Sud Spout Gub free; Retreat takes back any cards on your side'() {
+    const g = fresh(); g.phase = 'play';
+    const target = g.player('p1').field[0];
+    target.spout = g.card('sud_spout');
+    const th = give(g, 'p0', 'smahl_thief');
+    g.act('p0', { type: 'play', cardId: th.id, mode: 'steal', targets: [target.id] }); settle(g);
+    assert.strictEqual(g.score(g.player('p0')), 2, 'stolen Gub is Free and scores');
+    assert(g.discard.some((c) => c.key === 'sud_spout'));
+    g.player('p0').field[0].spout = g.card('sud_spout');
+    const rt = give(g, 'p0', 'retreat');
+    const ids = g.player('p0').field.map((x) => x.id);
+    g.act('p0', { type: 'play', cardId: rt.id, mode: 'retreat', targets: ids });
+    assert.strictEqual(g.player('p0').field.length, 0);
+    assert(g.player('p0').hand.some((c) => c.key === 'sud_spout'), "the opponent's Sud Spout comes back too");
+  },
   'Hand limit and no skipping two turns in a row'() {
     const g = fresh();
     g.act('p0', { type: 'skipDraw' });

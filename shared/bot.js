@@ -26,7 +26,8 @@
         const myFree = me.field.filter((s) => Game.isFree(s) && !Game.isElder(s)).length;
         const myToads = me.field.filter((s) => s.barricade && s.barricade.key === 'toad_rider').length;
         const bad = (pd.card.key === 'flash_flood' && myFree >= 2) || (pd.card.key === 'rumor_of_wasps' && myToads >= 1)
-          || (pd.card.key === 'gargok_plague' && me.hand.length >= 4);
+          || (pd.card.key === 'gargok_plague' && me.hand.length >= 4)
+          || (pd.card.key.startsWith('letter_') && game.letters.length === 2 && !leading(game, me));
         return bad && flop ? { type: 'react', cardId: flop.id } : { type: 'pass' };
       }
       if (pd.kind === 'plague' && pd.eligible.includes(me.id) && !pd.passed.includes(me.id)) {
@@ -64,6 +65,10 @@
   }
 
   function leaderScore(game, owner) { return game.score(owner); }
+
+  function leading(game, me) {
+    return game.players.every((q) => q === me || game.score(q) < game.score(me));
+  }
 
   function hurtsMe(game, me, play) {
     if (play.targets.includes(me.id)) return true;
