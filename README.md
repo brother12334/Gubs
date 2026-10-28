@@ -55,4 +55,4 @@ test/              rules tests and bot-vs-bot simulation
 
 ## Card art
 
-`public/cards/` holds the real cards from a scan of a physical deck, sharpened 4x with the Real-ESRGAN upscaler so the printed lettering stays crisp. `tools/upscale_cards.py` rebuilds them from a new scan (setup steps are at the top of the script). GUBS and its artwork are © Gamewright; this is an unofficial fan project for personal play.
+`public/cards/` holds the real cards, cut exactly as they appear in a scan of a physical deck (no retouching). `tools/crop_cards.py` rebuilds them from a scan laid out as a 10 x 7 grid. GUBS and its artwork are © Gamewright; this is an unofficial fan project for personal play.
