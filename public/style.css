@@ -496,3 +496,10 @@ table.scores tr.win td { color: var(--gold); font-weight: 800; }
 .home-sub { margin: 18px 0 4px; font-size: 15px; color: var(--gold); text-transform: uppercase; letter-spacing: .06em; }
 .solo .bots { display: flex; align-items: center; gap: 8px; font-weight: 700; flex: none; }
 .solo select { background: #0c1a11; border: 1px solid var(--line); color: var(--ink); padding: 9px 10px; border-radius: 10px; font: inherit; }
+
+/* deck / discard as tap targets (Scout, Age-Old Cure) */
+.slot.targetable { cursor: pointer; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .25), 0 0 0 3px var(--danger), 0 0 22px rgba(226, 101, 74, .8); animation: pulse 1.1s infinite; }
+/* Cricket Song: tap the card to imitate */
+.cards.pick { --card-w: 96px; --card-h: 134px; }
+.pick-card { cursor: pointer; transition: transform .12s; }
+.pick-card:active { transform: scale(.96); }

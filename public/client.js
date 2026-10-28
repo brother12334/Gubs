@@ -14,7 +14,7 @@
   let me = null; // my player id
   let view = null;
   let clockOffset = 0;
-  let targeting = null; // { card, opt, selected: [] }
+  let targeting = null; // { card, opts, tids, selected, multi } while a card waits for its target to be tapped
   let picked = new Set(); // hand cards picked for discarding
   let modalKey = null;
   let arrangeOrder = null;
@@ -144,8 +144,12 @@
       if (prev && prev.version !== view.version && targeting) {
         // Re-validate targets after the board changed.
         const card = view.hand.find((c) => c.id === targeting.card.id);
-        const opt = card && card.options.find((o) => o.mode === targeting.opt.mode && (o.as || null) === (targeting.opt.as || null));
-        targeting = opt ? { card, opt, selected: targeting.selected.filter((t) => opt.targets.includes(t)) } : null;
+        const same = (o, x) => o.mode === x.mode && (o.as || null) === (x.as || null);
+        const opts = card ? card.options.filter((o) => targeting.opts.some((x) => same(o, x))) : [];
+        const multi = targeting.multi && opts.find((o) => same(o, targeting.multi));
+        if (!opts.length || (targeting.multi && !multi)) targeting = null;
+        else targeting = { ...targeting, card, opts, tids: new Set(opts.flatMap(tidsFor)), multi: multi || null,
+          selected: multi ? targeting.selected.filter((t) => multi.targets.includes(t)) : [] };
       }
       render();
     } else if (m.t === 'error') {
@@ -242,7 +246,7 @@
   }
 
   function stackEl(s, ownerId) {
-    const targetable = targeting && targeting.opt.target.startsWith('stack') && targeting.opt.targets.includes(s.id);
+    const targetable = isTarget('s:' + s.id);
     const selected = targeting && targeting.selected.includes(s.id);
     const cls = `stack ${s.kind === 'ring' ? 'ring' : ''} ${targetable ? 'targetable' : ''} ${selected ? 'selected' : ''}`;
     if (s.kind === 'ring') {
@@ -266,7 +270,7 @@
 
   // Nameplate: avatar, name, cards in hand and Gubs scored.
   function plateEl(p, extra = '') {
-    const targetable = targeting && targeting.opt.target === 'player' && targeting.opt.targets.includes(p.id);
+    const targetable = isTarget('p:' + p.id);
     const backs = Array.from({ length: Math.min(p.handCount, 8) }, (_, i) => `<span class="mini-back" style="--i:${i}"></span>`).join('');
     return `<div class="plate ${extra} ${view.active === p.id ? 'active' : ''} ${targetable ? 'targetable' : ''}" data-player="${p.id}">
       ${avatarEl(p)}
@@ -283,7 +287,7 @@
 
   // A player's area on the playmat.
   function zoneEl(p) {
-    const targetable = targeting && targeting.opt.target === 'player' && targeting.opt.targets.includes(p.id);
+    const targetable = isTarget('p:' + p.id);
     const field = p.field.length ? p.field.map((s) => stackEl(s, p.id)).join('') : '<span class="empty-field">No cards in play</span>';
     return `<div class="zone ${view.active === p.id ? 'active' : ''} ${targetable ? 'targetable' : ''}" data-player="${p.id}">
       <span class="zone-tab">${esc(p.id === me ? 'Your side' : p.name)} <b>${p.score}</b></span>
@@ -311,6 +315,8 @@
     $('#discardCount').textContent = view.discardCount;
     const top = view.discard[view.discard.length - 1];
     $('#discardTop').outerHTML = top ? cardEl(top).replace('class="card ', 'id="discardTop" class="card ') : '<div id="discardTop" class="card empty"></div>';
+    $('#deckPile').classList.toggle('targetable', isTarget('deck'));
+    $('#discardPile').classList.toggle('targetable', isTarget('discard'));
 
     renderBanner();
     renderControls();
@@ -351,12 +357,20 @@
 
   function renderBanner() {
     const pd = view.pending;
+    const pr = view.prompt;
     let html = '';
     if (view.phase === 'over') html = '<span class="big">G-U-B!</span>The final letter has been drawn.';
     else if (targeting) {
-      const o = targeting.opt;
-      const what = o.target === 'player' ? 'a player' : o.target === 'stacks' ? (o.count ? `${o.count} Gub(s)` : 'stacks on your side') : 'a target';
-      html = `<span class="big">${esc(CARDS[targeting.card.key].name)}</span>${esc(o.label)}.<br>Tap ${what} glowing red on the table.`;
+      const name = CARDS[targeting.card.key].name + (targeting.as ? ` as ${CARDS[targeting.as].name}` : '');
+      const m = targeting.multi;
+      const what = m ? (m.count ? `Tap ${m.count} glowing Gubs (${targeting.selected.length}/${m.count}).` : 'Tap the cards on your side to take back, then confirm.')
+        : `${[...new Set(targeting.opts.map((o) => o.label))].join(', or ')}: tap what's glowing.`;
+      html = `<span class="big">${esc(name)}</span>${esc(what)}`;
+    } else if (pr && (pr.kind === 'react' || pr.kind === 'event' || pr.kind === 'plague')) {
+      const card = CARDS[pd.card.key].name;
+      const head = pr.kind === 'react' ? `${esc(nameOf(pd.actor))} plays ${esc(card)}!` : pr.kind === 'event' ? `${esc(card)} is drawn!` : 'Gargok Plague!';
+      const body = pr.kind === 'react' ? esc(pd.text) : esc(CARDS[pd.card.key].text);
+      html = `<span class="big">${head}</span>${body}<br>Tap your glowing card to stop it.${timerBar(pd.deadline, pr.kind === 'plague' ? 30000 : 20000)}`;
     } else if (pd) {
       const card = pd.card ? CARDS[pd.card.key].name : '';
       const total = pd.kind === 'merchant' || pd.kind === 'plague' ? 30000 : pd.kind === 'arrange' ? 60000 : 20000;
@@ -369,7 +383,7 @@
     } else if (view.active === me) {
       html = view.phase === 'draw' ? '<span class="big">Your turn</span>Draw a card, or skip drawing.'
         : view.phase === 'discard' ? `<span class="big">Too many cards</span>Discard down to ${view.handLimit}.`
-          : '<span class="big">Your turn</span>Tap a glowing card to play it (hold any card to look at it), then end your turn.';
+          : '<span class="big">Your turn</span>Tap a glowing card, then tap where it goes (hold any card to look at it).';
     } else {
       html = `<span class="big">${esc(nameOf(view.active))}</span>${view.phase === 'draw' ? 'is deciding whether to draw…' : 'is playing…'}`;
     }
@@ -381,12 +395,13 @@
     const pr = view.prompt;
     let html = '';
     if (targeting) {
-      if (targeting.opt.target === 'stacks') {
-        const need = targeting.opt.count;
+      if (targeting.multi && !targeting.multi.count) {
         const n = targeting.selected.length;
-        html += `<button class="btn gold" data-ctl="confirmTargets" ${need ? (n === need ? '' : 'disabled') : (n ? '' : 'disabled')}>Confirm (${n}${need ? '/' + need : ''})</button>`;
+        html += `<button class="btn gold" data-ctl="confirmTargets" ${n ? '' : 'disabled'}>Take back ${n} card${n === 1 ? '' : 's'}</button>`;
       }
       html += '<button class="btn" data-ctl="cancelTarget">Cancel</button>';
+    } else if (pr && (pr.kind === 'react' || pr.kind === 'event' || pr.kind === 'plague')) {
+      html = `<button class="btn" data-ctl="pass">${pr.kind === 'plague' ? 'Lose my hand' : 'Let it happen'}</button>`;
     } else if (pr && pr.kind === 'draw') {
       html = `<button class="btn gold" data-ctl="draw">Draw a card</button><button class="btn" data-ctl="skipDraw" ${pr.canSkip ? '' : 'disabled title="You can\'t skip two turns in a row"'}>Don't draw</button>`;
     } else if (pr && pr.kind === 'discard') {
@@ -405,6 +420,7 @@
       let cls = '';
       if (pr && pr.kind === 'discard') cls = picked.has(card.id) ? 'picked' : '';
       else if (pr && pr.kind === 'merchant') cls = 'playable';
+      else if (pr && pr.options) cls = pr.options.some((o) => o.cardId === card.id) ? 'playable' : 'dim';
       else if (card.options.length) cls = 'playable';
       else if (view.active === me && view.phase === 'play') cls = 'dim';
       if (targeting && targeting.card.id === card.id) cls = 'picked';
@@ -456,19 +472,6 @@
         <div class="opts"><button class="btn gold" data-ctl="dismiss">Got it</button></div>`);
       return;
     }
-    if (pr && (pr.kind === 'react' || pr.kind === 'event' || pr.kind === 'plague')) {
-      const card = pd.card;
-      const title = pr.kind === 'react' ? `${esc(nameOf(pd.actor))} plays ${esc(CARDS[card.key].name)}!`
-        : pr.kind === 'event' ? `Event: ${esc(CARDS[card.key].name)}` : 'Gargok Plague!';
-      const body = pr.kind === 'react' ? esc(pd.text) : esc(CARDS[card.key].text);
-      const passLabel = pr.kind === 'plague' ? 'Lose my hand' : 'Let it happen';
-      openModal(`prompt-${pr.kind}-${card.id}`, `<h3>${title}</h3><p>${body}</p>
-        <div class="cards">${cardEl(card)}</div>
-        ${timerBar(pd.deadline, pr.kind === 'plague' ? 30000 : 20000)}
-        <div class="opts">${pr.options.map((o) => `<button class="btn gold" data-respond="${pr.kind}" data-card="${o.cardId}">${esc(o.label)}</button>`).join('')}
-        <button class="btn" data-ctl="pass">${passLabel}</button></div>`);
-      return;
-    }
     if (pr && pr.kind === 'arrange') {
       if (!arrangeOrder || arrangeOrder.length !== pr.cards.length || !pr.cards.every((c) => arrangeOrder.includes(c.id))) arrangeOrder = pr.cards.map((c) => c.id);
       const html = `<h3>Scout: rearrange the deck</h3><p class="muted">Leftmost card will be drawn first. Click a card to move it left.</p>
@@ -479,44 +482,92 @@
       return;
     }
     if (modalKey && (modalKey.startsWith('prompt') || modalKey === 'arrange' || modalKey.startsWith('reveal') || modalKey.startsWith('result'))) closeModal();
-    if (modalKey === 'menu' && !(view.active === me && view.phase === 'play' && !view.pending)) closeModal();
+    if (modalKey === 'wild' && !(view.active === me && view.phase === 'play' && !view.pending)) closeModal();
   }
 
-  function openCardMenu(card) {
-    const def = CARDS[card.key];
-    const opts = card.options;
-    modalKey = null;
-    openModal('menu', `<div class="menu-top">${cardEl(card)}<div>
-      <h3>${esc(def.name)}</h3><span class="type-pill">${esc(TYPE_LABEL[def.type])}</span><p>${esc(def.text)}</p></div></div>
-      <div class="opts">${opts.map((o, i) => `<button class="btn gold" data-opt="${i}" data-card="${card.id}">${esc(o.label)}</button>`).join('')}
-      ${opts.length ? '' : '<p class="muted">This card can\'t be played right now.</p>'}
-      <button class="btn" data-ctl="closeModal">Close</button></div>`);
+  // Everything a card can be played on, as tappable things on the table:
+  // 's:<stack>', 'p:<player>', 'deck' or 'discard'.
+  function tidsFor(opt) {
+    switch (opt.mode) {
+      case 'gub': return ['p:' + me];
+      case 'cure': return ['discard'];
+      case 'scoutArrange': return ['deck'];
+      case 'omen': {
+        const out = [];
+        for (const q of view.players) for (const st of q.field) if (st.barricade && st.barricade.key === 'mushroom') out.push('s:' + st.id);
+        return out;
+      }
+      default: return opt.targets.map((t) => (opt.target === 'player' ? 'p:' : 's:') + t);
+    }
   }
+  const isTarget = (tid) => !!targeting && (targeting.multi
+    ? targeting.multi.targets.includes(tid.slice(2)) && tid.startsWith('s:')
+    : targeting.tids.has(tid));
 
-  // Targets that need no further choice: none needed, the only possible one, or exactly the
-  // number required. Returns null when the player still has to pick.
-  function obviousTargets(opt) {
-    if (opt.target === 'none') return [];
-    if ((opt.target === 'stack' || opt.target === 'player') && opt.targets.length === 1) return [opt.targets[0]];
-    if (opt.target === 'stacks' && opt.count && opt.targets.length === opt.count) return [...opt.targets];
-    return null;
-  }
-
-  function choose(card, opt) {
+  function play(card, opt, targets) {
+    act({ type: 'play', cardId: card.id, mode: opt.mode, as: opt.as || null, targets });
+    targeting = null;
     closeModal();
-    const targets = obviousTargets(opt);
-    if (targets) { act({ type: 'play', cardId: card.id, mode: opt.mode, as: opt.as || null, targets }); targeting = null; render(); return; }
-    targeting = { card, opt, selected: [] };
     render();
   }
 
-  // One tap plays a card whenever there is only one way to play it; the menu only appears
-  // when there is a real choice to make.
+  // Tap a card: if there's only one thing it can do, it happens; otherwise everything it can be
+  // played on lights up and tapping one of those decides how it is played.
+  function startTargeting(card, opts, as = null) {
+    closeModal();
+    const tids = new Set(opts.flatMap(tidsFor));
+    if (opts.length === 1 && tids.size <= 1) {
+      const o = opts[0];
+      if (o.target === 'stacks') { // a Ring with exactly as many Free Gubs as it needs
+        if (o.count && o.targets.length === o.count) return play(card, o, [...o.targets]);
+      } else return play(card, o, o.target === 'none' ? [] : [...o.targets]);
+    }
+    targeting = { card, opts, as, tids, selected: [], multi: null };
+    render();
+  }
+
   function tapCard(card) {
     const opts = card.options;
     if (!opts.length) { zoom([card]); return; }
-    if (opts.length === 1) { choose(card, opts[0]); return; }
-    openCardMenu(card);
+    if (CARDS[card.key].type === 'wild') {
+      // Cricket Song: tap the card it should be played as.
+      const keys = [...new Set(opts.map((o) => o.as))];
+      if (keys.length === 1) return startTargeting(card, opts, keys[0]);
+      modalKey = null;
+      openModal('wild', `<h3>Play Cricket Song as…</h3>
+        <div class="cards pick">${keys.map((k) => `<div class="pick-card" data-as="${k}">${cardEl({ key: k })}</div>`).join('')}</div>
+        <div class="opts"><button class="btn" data-ctl="closeModal">Cancel</button></div>`);
+      wildCard = card;
+      return;
+    }
+    startTargeting(card, opts);
+  }
+  let wildCard = null;
+
+  // Something on the table was tapped while a card is waiting for its target.
+  function tapTarget(tid) {
+    if (!targeting || !isTarget(tid)) return false;
+    const { card } = targeting;
+    const id = tid.includes(':') ? tid.slice(2) : tid;
+    if (targeting.multi) {
+      const m = targeting.multi;
+      const sel = targeting.selected;
+      if (sel.includes(id)) sel.splice(sel.indexOf(id), 1);
+      else if (!m.count || sel.length < m.count) sel.push(id);
+      if (m.count && sel.length === m.count) return play(card, m, [...sel]), true;
+      render();
+      return true;
+    }
+    const opt = targeting.opts.find((o) => tidsFor(o).includes(tid));
+    if (opt.target === 'stacks') {
+      targeting.multi = opt;
+      targeting.selected = [id];
+      if (opt.count === 1) return play(card, opt, [id]), true;
+      render();
+      return true;
+    }
+    play(card, opt, opt.target === 'none' ? [] : [id]);
+    return true;
   }
 
   // Press and hold any card to see it large (so a tap can always mean "play").
@@ -551,9 +602,7 @@
   document.addEventListener('contextmenu', (e) => { if (e.target.closest('.card')) e.preventDefault(); });
 
   function sendTargets() {
-    const { card, opt, selected } = targeting;
-    act({ type: 'play', cardId: card.id, mode: opt.mode, as: opt.as || null, targets: selected });
-    targeting = null;
+    if (targeting && targeting.multi) play(targeting.card, targeting.multi, [...targeting.selected]);
   }
 
   // ---------- events ----------
@@ -576,17 +625,10 @@
       else if (k === 'confirmTargets') sendTargets();
       return;
     }
-    const resp = t.closest('[data-respond]');
-    if (resp) {
-      const kind = resp.dataset.respond;
-      act({ type: kind === 'plague' ? 'cure' : 'react', cardId: resp.dataset.card });
-      closeModal();
-      return;
-    }
-    const optBtn = t.closest('[data-opt]');
-    if (optBtn) {
-      const card = view.hand.find((c) => c.id === optBtn.dataset.card);
-      if (card) choose(card, card.options[Number(optBtn.dataset.opt)]);
+    const pick = t.closest('[data-as]');
+    if (pick && wildCard) {
+      const as = pick.dataset.as;
+      startTargeting(wildCard, wildCard.options.filter((o) => o.as === as), as);
       return;
     }
     const arr = t.closest('[data-arr]');
@@ -606,6 +648,10 @@
         render();
       } else if (pr && pr.kind === 'merchant') {
         act({ type: 'keep', cardId: card.id });
+      } else if (pr && pr.options) {
+        // Interrupts: tap the Feather / Blindfold / Flop Boat / Age-Old Cure itself.
+        if (pr.options.some((o) => o.cardId === card.id)) act({ type: pr.kind === 'plague' ? 'cure' : 'react', cardId: card.id });
+        else zoom([card]);
       } else if (targeting && targeting.card.id === card.id) {
         targeting = null; render(); // tap the chosen card again to cancel
       } else {
@@ -617,25 +663,17 @@
     const stack = t.closest('[data-stack]');
     if (stack && view) {
       const id = stack.dataset.stack;
-      if (targeting && targeting.opt.target.startsWith('stack') && targeting.opt.targets.includes(id)) {
-        if (targeting.opt.target === 'stack') { targeting.selected = [id]; sendTargets(); return; }
-        const sel = targeting.selected;
-        if (sel.includes(id)) sel.splice(sel.indexOf(id), 1);
-        else if (!targeting.opt.count || sel.length < targeting.opt.count) sel.push(id);
-        render();
-        return;
-      }
+      if (tapTarget('s:' + id)) return;
+      if (targeting && isTarget('p:' + stack.dataset.owner)) { tapTarget('p:' + stack.dataset.owner); return; }
       const owner = playerById(stack.dataset.owner);
       const s = owner && owner.field.find((x) => x.id === id);
       if (s) zoom(s.kind === 'ring' ? [s.ring, ...s.gubs] : [s.gub, s.barricade, s.spout].filter(Boolean));
       return;
     }
     const seat = t.closest('[data-player]');
-    if (seat && targeting && targeting.opt.target === 'player' && targeting.opt.targets.includes(seat.dataset.player)) {
-      targeting.selected = [seat.dataset.player];
-      sendTargets();
-      return;
-    }
+    if (seat && tapTarget('p:' + seat.dataset.player)) return;
+    if (t.closest('#deckPile') && tapTarget('deck')) return;
+    if (t.closest('#discardPile') && tapTarget('discard')) return;
     const kick = t.closest('[data-kick]');
     if (kick) send({ t: 'kick', id: kick.dataset.kick });
     if (t.closest('#discardTop') && view && view.discard.length) zoom([...view.discard].reverse());
@@ -646,7 +684,7 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (!$('#zoom').classList.contains('hidden')) $('#zoom').classList.add('hidden');
-      else if (targeting) { targeting = null; render(); } else if (modalKey === 'menu') closeModal();
+      else if (targeting) { targeting = null; render(); } else if (modalKey === 'wild') closeModal();
     }
   });
 
