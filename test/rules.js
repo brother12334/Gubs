@@ -131,6 +131,7 @@ const tests = {
     g.act('p0', { type: 'endTurn' });
     assert.strictEqual(g.phase, 'discard');
     g.act('p0', { type: 'discard', cardIds: g.player('p0').hand.slice(0, 2).map((c) => c.id) });
+    g.deck.unshift(g.card('gub')); // a plain draw, so no Event interrupts the turn
     g.act('p1', { type: 'draw' }); g.act('p1', { type: 'endTurn' });
     assert.throws(() => g.act('p0', { type: 'skipDraw' }), /two turns/);
   },
