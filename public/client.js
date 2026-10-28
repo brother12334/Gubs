@@ -74,12 +74,29 @@
   }
 
   // ---------- helpers ----------
+  const BOLT = '<svg viewBox="0 0 24 32" class="bolt" aria-hidden="true"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7a33a"/><stop offset="1" stop-color="#c2311b"/></linearGradient></defs><path d="M15 1 4 18h7l-4 13L21 12h-7z" fill="url(#bg)" stroke="#7a1e0e" stroke-width="1"/></svg>';
+
+  // Card faces are drawn here; only the illustration comes from an image.
   function cardEl(card, extra = '') {
     const def = card && CARDS[card.key];
     if (!def) return `<div class="card empty ${extra}"></div>`;
-    return `<div class="card ${extra}" data-key="${card.key}" title="${esc(def.name)}: ${esc(def.text)}">
-      <div class="fallback">${esc(def.name)}</div>
-      <img src="cards/${card.key}.jpg" alt="${esc(def.name)}" onerror="this.remove()"></div>`;
+    const t = def.type;
+    const art = `<div class="cf-art"><img src="cards/art/${card.key}.jpg" alt="" onerror="this.remove()"></div>`;
+    const rules = def.printed != null ? def.printed : def.text;
+    let face;
+    if (card.key === 'gub') {
+      face = `${art}<div class="cf-band"><span class="cf-gub">GUB</span></div>`;
+    } else if (t === 'letter') {
+      face = `${art}<div class="cf-band"></div><div class="cf-plaque bolt-only">${BOLT}</div>`;
+    } else {
+      const titleSize = Math.min(12, 88 / (def.name.length * 0.52)).toFixed(2);
+      const label = t === 'event' ? BOLT : esc(TYPE_LABEL[t].toUpperCase());
+      face = `<div class="cf-title" style="font-size:${titleSize}cqw">${esc(def.name)}</div>
+        <div class="cf-flavor">“${esc(def.flavor || '')}”</div>${art}
+        <div class="cf-band"></div><div class="cf-plaque">${label}</div>
+        <div class="cf-rules"><span>${esc(rules)}</span></div>`;
+    }
+    return `<div class="card face t-${t} ${card.key === 'esteemed_elder' ? 'k-elder' : ''} ${extra}" data-key="${card.key}" title="${esc(def.name)}: ${esc(def.text)}">${face}</div>`;
   }
   const playerById = (id) => view.players.find((p) => p.id === id);
   const nameOf = (id) => (playerById(id) || { name: '?' }).name;
@@ -424,6 +441,8 @@
     const kick = t.closest('[data-kick]');
     if (kick) send({ t: 'kick', id: kick.dataset.kick });
     if (t.closest('#discardTop') && view && view.discard.length) zoom([...view.discard].reverse());
+    const g = t.closest('.gallery .card');
+    if (g) zoom([{ key: g.dataset.key }]);
   });
 
   document.addEventListener('keydown', (e) => {
@@ -467,6 +486,7 @@
     <h4>Your turn</h4><p><b>Draw</b> one card, or choose not to (never two turns in a row). Then <b>play</b> as many cards as you like, then <b>discard</b> down to 8 and say "Go!".</p>
     <h4>Card types</h4><p><b>Barricades</b> protect a Gub from Lures. <b>Traps</b> trap Free Gubs (trapped Gubs don't score). <b>Hazards</b> attack. <b>Tools</b> help. <b>Interrupts</b> are played on anyone's turn, the moment something happens. <b>Events</b> happen as soon as they are drawn, then you draw again; so do Letters.</p>
     <h4>End</h4><p>When the third letter is drawn the game ends at once. Ties go to the Esteemed Elder, then to whoever holds the fewest cards.</p>
+    <h4>The cards</h4><div class="gallery">${Object.keys(CARDS).map((key) => cardEl({ key })).join('')}</div>
     <h4>Card guide</h4><ul class="guide">${guide}</ul>`;
 
   // Start: connect and rejoin a table from the URL if we have one.

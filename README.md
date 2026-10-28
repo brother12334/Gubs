@@ -55,4 +55,4 @@ test/              rules tests and bot-vs-bot simulation
 
 ## Card art
 
-`public/cards/` contains crops from a scan of a physical GUBS deck. GUBS and its artwork are © Gamewright. This is an unofficial fan project for personal play. If the images are removed, cards fall back to showing their names.
+Card faces (title, flavor quote, plaque, colour band and rules box) are drawn by the browser, so they stay crisp at any size. Only the illustrations in `public/cards/art/` come from a scan of a physical deck, along with the card back and the Gub card's leopard-print band. `tools/extract_art.py` rebuilds them from a new scan. GUBS and its artwork are © Gamewright; this is an unofficial fan project for personal play.
