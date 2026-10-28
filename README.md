@@ -17,8 +17,8 @@ Play it in the browser with 2-6 players: friends, bots, or both.
 The game runs entirely in the browser when you play against bots, so it works on GitHub Pages with no server.
 Online tables with friends need the Node server below.
 
-1. In the repository on GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-2. Push to `master` (or run the *Deploy to GitHub Pages* workflow by hand). The site appears at `https://<your-user>.github.io/<repo>/`.
+1. In the repository on GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch**, branch `master`, folder `/ (root)`.
+2. The site appears at `https://<your-user>.github.io/<repo>/` a minute after each push. The root `index.html` forwards to the game in `public/`.
 
 On a phone, use **Add to Home Screen** (Safari: Share menu, Chrome: ⋮ menu) to play it full screen like an app.
 A bots game is saved after every move, so if the phone reloads the page, tap **Resume your game**.
