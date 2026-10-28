@@ -8,7 +8,20 @@ Play it in the browser with 2-6 players: friends, bots, or both.
 - Interrupt windows: when someone plays a Hazard or Trap, anyone holding a Feather, Blindfold or Cricket Song gets a prompt to cancel it. Flop Boat and Age-Old Cure prompts appear when Events are drawn.
 - Reconnects automatically if you refresh. If a player stays disconnected, a bot plays their turns until they return.
 - 3D tabletop: a playmat on a wooden table, player nameplates, and a big spotlight whenever a card is played
-- Works on desktop and phones; includes game log and chat
+- Bots-only mode that runs entirely in the browser (works on GitHub Pages)
+- Phone layout with big tap targets and bottom-sheet menus; can be added to the home screen
+- Includes game log and chat
+
+## Play on GitHub Pages (bots only)
+
+The game runs entirely in the browser when you play against bots, so it works on GitHub Pages with no server.
+Online tables with friends need the Node server below.
+
+1. In the repository on GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+2. Push to `master` (or run the *Deploy to GitHub Pages* workflow by hand). The site appears at `https://<your-user>.github.io/<repo>/`.
+
+On a phone, use **Add to Home Screen** (Safari: Share menu, Chrome: ⋮ menu) to play it full screen like an app.
+A bots game is saved after every move, so if the phone reloads the page, tap **Resume your game**.
 
 ## Run it
 
@@ -46,10 +59,10 @@ The printed card guide wasn't available, so a few calls are based on the card te
 ## Project layout
 
 ```
-shared/cards.js    card list (names, counts, text), used by server and browser
-server/engine.js   authoritative rules engine
-server/bot.js      heuristic bot player
-server/index.js    static file server + WebSocket rooms
+shared/cards.js    card list (names, counts, text)
+shared/engine.js   rules engine (runs on the server for online tables, in the browser for bots games)
+shared/bot.js      heuristic bot player
+server/index.js    static file server + WebSocket rooms for online play
 public/            browser client (index.html, style.css, client.js, cards/)
 test/              rules tests and bot-vs-bot simulation
 ```

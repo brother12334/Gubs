@@ -4,8 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { WebSocketServer } = require('ws');
-const { Game } = require('./engine');
-const { decide } = require('./bot');
+const { Game } = require('../shared/engine');
+const { decide } = require('../shared/bot');
 
 const PORT = Number(process.env.PORT) || 3000;
 const ROOT = path.join(__dirname, '..');
@@ -13,6 +13,7 @@ const STATIC = { '/shared/': path.join(ROOT, 'shared'), '/': path.join(ROOT, 'pu
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
+  '.webmanifest': 'application/manifest+json',
 };
 const BOT_DELAY_MS = Number(process.env.BOT_DELAY_MS) || 1400; // pause between bot moves so humans can follow along
 const IDLE_TAKEOVER_MS = 45000; // a disconnected player's turn is played by a bot after this long

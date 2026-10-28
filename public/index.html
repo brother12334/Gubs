@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#24452a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="GUBS">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <title>GUBS Online</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
@@ -13,15 +20,27 @@
   <section id="home" class="screen">
     <div class="home-card">
       <h1 class="logo">G<span>U</span>B<span>S</span></h1>
-      <p class="tagline">A game of wit &amp; luck. Online with friends or bots, 2 to 6 players.</p>
-      <label class="field">Your name <input id="name" maxlength="16" placeholder="Gub Keeper"></label>
-      <div class="row">
-        <button id="createBtn" class="btn gold">Create a table</button>
+      <p class="tagline">A game of wit &amp; luck for 2 to 6 players. Play against bots, or online with friends.</p>
+      <label class="field">Your name <input id="name" maxlength="16" placeholder="Gub Keeper" autocomplete="nickname"></label>
+      <h3 class="home-sub">Play against bots</h3>
+      <div class="row solo">
+        <label class="bots">Bots
+          <select id="botCount"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select>
+        </label>
+        <button id="soloBtn" class="btn gold">Play vs bots</button>
       </div>
-      <div class="row join">
-        <input id="codeInput" maxlength="4" placeholder="CODE" autocomplete="off">
-        <button id="joinBtn" class="btn">Join table</button>
+      <div class="row"><button id="resumeBtn" class="btn hidden">Resume your game</button></div>
+      <div id="onlineBox">
+        <h3 class="home-sub">Play online with friends</h3>
+        <div class="row">
+          <button id="createBtn" class="btn">Create a table</button>
+        </div>
+        <div class="row join">
+          <input id="codeInput" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters">
+          <button id="joinBtn" class="btn">Join table</button>
+        </div>
       </div>
+      <p id="offlineNote" class="muted hidden">Online tables need the GUBS game server, which isn't running on this site. Bots-only play works fully here.</p>
       <details class="rules">
         <summary>How to play</summary>
         <div id="rulesText"></div>
@@ -75,19 +94,24 @@
       <div id="spotlight" class="spotlight"></div>
     </div>
     <aside id="side" class="side">
-      <div class="side-head">Game log <button id="sideClose" class="icon-btn small" aria-label="Close">&#10005;</button></div>
+      <div class="side-head">Game log
+        <span><button id="leaveBtn" class="btn small danger">Leave game</button> <button id="sideClose" class="icon-btn small" aria-label="Close">&#10005;</button></span>
+      </div>
       <ol id="log" class="log"></ol>
-      <div class="side-head">Chat</div>
+      <div class="side-head" id="chatHead">Chat</div>
       <div id="chat" class="chat"></div>
       <form id="chatForm" class="chat-form"><input id="chatInput" maxlength="200" placeholder="Say something…"><button class="btn small">Send</button></form>
     </aside>
   </section>
 
+  <div class="rotate-hint">Turn your phone upright to play GUBS.</div>
   <div id="modal" class="modal hidden"><div class="modal-box" id="modalBox"></div></div>
   <div id="zoom" class="zoom hidden"></div>
   <div id="toast" class="toast"></div>
 
-  <script src="/shared/cards.js"></script>
+  <script src="shared/cards.js"></script>
+  <script src="shared/engine.js"></script>
+  <script src="shared/bot.js"></script>
   <script src="client.js"></script>
 </body>
 </html>

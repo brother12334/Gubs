@@ -1,7 +1,7 @@
 // Plays many all-bot games with a fake clock and checks the 70-card deck is always intact.
 const assert = require('assert');
-const { Game } = require('../server/engine');
-const { decide } = require('../server/bot');
+const { Game } = require('../shared/engine');
+const { decide } = require('../shared/bot');
 const { CARDS } = require('../shared/cards');
 
 const TOTAL = Object.values(CARDS).reduce((n, c) => n + c.count, 0);

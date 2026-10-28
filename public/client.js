@@ -21,20 +21,110 @@
   let lastLogLen = 0;
 
   // ---------- connection ----------
+  let serverOnline = false;
   function connect(onOpen) {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    ws = new WebSocket(`${proto}://${location.host}`);
-    ws.onopen = onOpen;
+    try { ws = new WebSocket(`${proto}://${location.host}`); } catch { setOffline(); return; }
+    ws.onopen = () => { serverOnline = true; setOffline(false); onOpen(); };
     ws.onmessage = (e) => handle(JSON.parse(e.data));
     ws.onclose = () => {
+      if (!serverOnline) { setOffline(); return; } // no game server here (e.g. GitHub Pages)
       const sess = store.get('gubs.session');
-      if (room && sess) {
+      if (room && sess && !solo.game) {
         toast('Connection lost. Reconnecting…', true);
         setTimeout(() => connect(() => send({ t: 'join', code: sess.code, token: sess.token })), 1500);
       }
     };
   }
-  function send(m) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(m)); }
+  function setOffline(off = true) {
+    $('#onlineBox').classList.toggle('hidden', off);
+    $('#offlineNote').classList.toggle('hidden', !off);
+  }
+  function send(m) {
+    if (solo.game) solo.handle(m);
+    else if (ws && ws.readyState === 1) ws.send(JSON.stringify(m));
+  }
+
+  // ---------- bots-only game, run entirely in this browser ----------
+  const { Game } = window.GUBS_ENGINE;
+  const { decide } = window.GUBS_BOT;
+  const SOLO_KEY = 'gubs.solo';
+  const BOT_NAMES = ['Mossy', 'Pip', 'Bramble', 'Toadstool', 'Fennel'];
+  const solo = {
+    game: null, loop: null, lastBot: 0, version: -1,
+    seats() { return this.game.players.map((p) => ({ id: p.id, name: p.name, isBot: p.isBot, connected: true })); },
+    start(name, bots) {
+      const players = [{ id: 'you', name, isBot: false }, ...BOT_NAMES.slice(0, bots).map((n, i) => ({ id: 'bot' + i, name: n + ' (bot)', isBot: true }))];
+      this.run(new Game(players));
+    },
+    resume() {
+      const saved = store.get(SOLO_KEY);
+      if (!saved) return false;
+      const g = Object.assign(Object.create(Game.prototype), saved, { now: () => Date.now() });
+      this.run(g);
+      return true;
+    },
+    run(game) {
+      this.stop();
+      this.game = game;
+      this.version = -1;
+      history.replaceState(null, '', location.pathname);
+      handle({ t: 'room', room: { code: 'SOLO', hostId: 'you', started: true, seats: this.seats() }, you: 'you' });
+      this.push();
+      this.loop = setInterval(() => this.tick(), 250);
+    },
+    stop() { clearInterval(this.loop); this.loop = null; this.game = null; },
+    push() {
+      const g = this.game;
+      this.version = g.version;
+      handle({ t: 'state', view: g.viewFor('you'), now: Date.now() });
+      if (g.phase === 'over') store.set(SOLO_KEY, null);
+      else store.set(SOLO_KEY, JSON.parse(JSON.stringify(g, (k, v) => (k === 'now' ? undefined : v))));
+    },
+    tick() {
+      const g = this.game;
+      if (!g) return;
+      g.tick();
+      if (g.phase !== 'over' && Date.now() - this.lastBot >= (store.get('gubs.botDelay') || 1400)) { // botDelay: testing aid
+        for (const pid of g.waitingOn()) {
+          if (!g.player(pid).isBot) continue;
+          const action = decide(g, pid);
+          if (!action) continue;
+          try { g.act(pid, action); } catch (e) { console.error('bot', e.message); }
+          this.lastBot = Date.now();
+          break;
+        }
+      }
+      if (g.version !== this.version) this.push();
+    },
+    handle(m) {
+      const g = this.game;
+      try {
+        if (m.t === 'action') g.act('you', m.action || {});
+        else if (m.t === 'rematch') {
+          this.run(new Game(g.players.map((p) => ({ id: p.id, name: p.name, isBot: p.isBot }))));
+          return;
+        } else if (m.t === 'chat') handle({ t: 'chat', from: g.player('you').name, text: m.text });
+      } catch (e) {
+        handle({ t: 'error', msg: e.message });
+      }
+      if (this.game && g.version !== this.version) this.push();
+    },
+  };
+
+  function leaveGame() {
+    if (solo.game) { solo.stop(); store.set(SOLO_KEY, null); } else {
+      store.set('gubs.session', null);
+      if (ws) ws.close();
+      serverOnline = false;
+      connect(() => {});
+    }
+    room = null; view = null; targeting = null;
+    history.replaceState(null, '', location.pathname);
+    $('#side').classList.remove('open');
+    $('#resumeBtn').classList.toggle('hidden', !store.get(SOLO_KEY));
+    render();
+  }
   function act(action) { send({ t: 'action', action }); }
 
   function handle(m) {
@@ -121,6 +211,7 @@
 
   // ---------- rendering ----------
   function render() {
+    document.body.classList.toggle('solo-mode', !!solo.game);
     $('#home').classList.toggle('hidden', !!room);
     $('#lobby').classList.toggle('hidden', !room || room.started);
     $('#table').classList.toggle('hidden', !room || !room.started || !view);
@@ -157,9 +248,11 @@
     if (s.kind === 'ring') {
       const gubs = s.gubs.map((g, i) => cardEl(g, 'ringgub').replace('class="card', `style="--i:${i + 1}" class="card`)).join('');
       return `<div class="${cls}" style="--n:${s.gubs.length}" data-stack="${s.id}" data-owner="${ownerId}">${cardEl(s.ring)}${gubs}
-        <span class="stack-tag tag-trapped">${s.gubs.length} trapped</span></div>`;
+        <span class="stack-tag tag-trapped" data-short="${s.gubs.length} trap"><span class="long">${s.gubs.length} trapped</span></span></div>`;
     }
-    const tag = s.elder ? '<span class="stack-tag tag-elder">Elder</span>' : `<span class="stack-tag tag-${s.state}">${s.state}</span>`;
+    const SHORT = { free: 'Free', protected: 'Prot', trapped: 'Trap' };
+    const tag = s.elder ? '<span class="stack-tag tag-elder">Elder</span>'
+      : `<span class="stack-tag tag-${s.state}" data-short="${SHORT[s.state]}"><span class="long">${s.state}</span></span>`;
     const over = s.barricade || s.spout ? 'has-over' : '';
     return `<div class="${cls} ${over}" data-stack="${s.id}" data-owner="${ownerId}">${cardEl(s.gub)}${s.barricade ? cardEl(s.barricade, 'over-barricade') : ''}${s.spout ? cardEl(s.spout, 'over-spout') : ''}${tag}</div>`;
   }
@@ -494,6 +587,10 @@
   nameInput.value = store.get('gubs.name') || '';
   const myName = () => { const n = nameInput.value.trim() || 'Gub Keeper'; store.set('gubs.name', n); return n; };
 
+  $('#soloBtn').onclick = () => { store.set(SOLO_KEY, null); solo.start(myName(), Number($('#botCount').value)); };
+  $('#resumeBtn').onclick = () => { if (!solo.resume()) toast('No saved game to resume.', true); };
+  $('#resumeBtn').classList.toggle('hidden', !store.get(SOLO_KEY));
+  $('#leaveBtn').onclick = () => { if (confirm('Leave this game?')) leaveGame(); };
   $('#createBtn').onclick = () => send({ t: 'create', name: myName() });
   $('#joinBtn').onclick = () => {
     const code = $('#codeInput').value.trim().toUpperCase();
@@ -509,7 +606,6 @@
   };
   $('#sideToggle').onclick = () => $('#side').classList.toggle('open');
   $('#sideClose').onclick = () => $('#side').classList.remove('open');
-  $('#spotlight').onclick = () => { clearTimeout(nextSpotlight.h); nextSpotlight(); };
   $('#chatForm').onsubmit = (e) => {
     e.preventDefault();
     const v = $('#chatInput').value.trim();

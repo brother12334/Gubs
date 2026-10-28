@@ -1,6 +1,6 @@
 // Focused checks of individual card interactions.
 const assert = require('assert');
-const { Game } = require('../server/engine');
+const { Game } = require('../shared/engine');
 
 let clock = 0;
 const now = () => clock;

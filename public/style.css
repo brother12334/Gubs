@@ -128,7 +128,8 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
     repeating-linear-gradient(90deg, rgba(25, 12, 4, .55) 0 3px, transparent 3px 240px),
     linear-gradient(90deg, #6d4221, #8a5730 22%, #6f4423 45%, #85532c 70%, #6a3f1e);
 }
-.hud-top { display: flex; align-items: center; gap: 14px; padding: 8px 14px 0; z-index: 5; }
+.hud-top { display: flex; align-items: center; gap: 14px; padding: 8px 14px 0; z-index: 5; white-space: nowrap; }
+.solo-mode #tableCode { display: none; }
 .brand {
   font-family: 'IM Fell English SC', serif; font-size: 26px; color: var(--gold);
   text-shadow: 0 2px 0 #3a2108, 0 4px 10px rgba(0, 0, 0, .6);
@@ -192,6 +193,7 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
 .zone.targetable { cursor: pointer; box-shadow: 0 0 0 3px var(--danger), 0 0 26px rgba(226, 101, 74, .8); animation: pulse 1.1s infinite; }
 .zone-tab {
   position: absolute; left: -3px; top: -3px; padding: 2px 12px; border-radius: 10px 0 10px 0;
+  white-space: nowrap; max-width: calc(100% + 3px); overflow: hidden; text-overflow: ellipsis;
   background: linear-gradient(#ffe27a, #f2c13a); color: #3a2600; font-size: 12px; font-weight: 900;
 }
 .zone-tab b { margin-left: 4px; padding: 0 6px; border-radius: 99px; background: #3a2600; color: #ffe27a; }
@@ -258,7 +260,7 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
 
 /* spotlight: the card just played, big, with a sweeping title */
 .spotlight { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; pointer-events: none; visibility: hidden; }
-.spotlight.show { visibility: visible; pointer-events: auto; cursor: pointer; }
+.spotlight.show { visibility: visible; } /* display-only: never blocks taps on the table */
 .spot-card { --card-w: 220px; --card-h: 307px; perspective: 900px; }
 .spot-card .card { box-shadow: 0 0 0 4px #ffd963, 0 0 40px rgba(255, 217, 99, .7), 0 30px 60px rgba(0, 0, 0, .7); }
 .spotlight.show .spot-card .card { animation: spot-card 1.7s cubic-bezier(.2, .8, .2, 1) forwards; }
@@ -376,33 +378,123 @@ table.scores tr.win td { color: var(--gold); font-weight: 800; }
 .toast:not(.show) { visibility: hidden; }
 .toast.info { background: #1f3a27; border-color: var(--gold); }
 
+/* ---------- phones: one column, nothing overlapping, big tap targets ---------- */
 @media (max-width: 900px) {
-  :root { --hand-w: 76px; --hand-h: 107px; }
+  :root { --hand-w: 76px; --hand-h: 106px; }
+  body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   .logo { font-size: 64px; }
-  .brand { font-size: 20px; }
+  .home-card { padding: 22px 18px; }
+
+  #table, .tabletop { height: 100vh; height: 100dvh; }
+  .tabletop {
+    display: flex; flex-direction: column;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  }
+  .hud-top { padding: 6px 8px 0; gap: 8px; }
+  .brand { font-size: 19px; }
   .turn-info { font-size: 13px; padding: 4px 10px; }
-  .opp-row { gap: 6px; padding: 4px 6px 6px; }
-  .plate { padding: 3px 8px 3px 3px; gap: 6px; }
+  .icon-btn { width: 44px; height: 40px; }
+
+  .opp-row { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; gap: 6px; padding: 6px 8px; scrollbar-width: none; }
+  .opp-row::-webkit-scrollbar { display: none; }
+  .plate { flex: none; padding: 3px 9px 3px 3px; gap: 6px; }
   .plate .avatar { width: 32px; height: 32px; }
-  .plate .nm { max-width: 90px; font-size: 13px; }
+  .plate .nm { max-width: 96px; font-size: 13px; }
   .backs { display: none; }
-  .mat-wrap { padding: 2px 0 200px; perspective: 1000px; }
-  .mat { width: calc(100% - 16px); transform: rotateX(8deg); padding: 8px; border-width: 6px; gap: 6px; }
-  .opp-zones { --card-w: 40px; --card-h: 56px; gap: 5px; }
-  .my-zone { --card-w: 54px; --card-h: 76px; }
+
+  .mat-wrap { flex: 1; min-height: 0; padding: 0 6px; perspective: 1100px; }
+  .mat {
+    width: 100%; height: 100%; transform: rotateX(5deg); padding: 7px; border-width: 6px; gap: 6px;
+    grid-template-rows: minmax(84px, 1fr) auto minmax(110px, 1.3fr);
+  }
+  /* every opponent stays visible: up to three side by side, each scrolls on its own */
+  .opp-zones { grid-template-columns: repeat(min(var(--n, 1), 3), minmax(0, 1fr)); grid-auto-rows: minmax(84px, 1fr); gap: 5px; overflow-y: auto; --card-w: 40px; --card-h: 56px; }
+  .opp-zones .field-row { gap: 4px; }
+  .my-zone { --card-w: 58px; --card-h: 81px; }
   .zone { padding: 18px 5px 5px; }
-  .mat-mid { --card-w: 40px; --card-h: 56px; padding: 0; }
-  .emblem { width: 92px; height: 92px; border-width: 4px; }
-  .letter { width: 18px; height: 24px; font-size: 15px; }
-  .banner { left: 8px; right: 8px; width: auto; bottom: 150px; padding: 6px 10px; font-size: 13px; }
-  .banner .big { font-size: 17px; }
-  .controls { left: 8px; right: 8px; width: auto; bottom: 102px; flex-direction: row; justify-content: center; }
-  .controls .btn { padding: 9px 12px; font-size: 14px; }
+  .zone .empty-field { font-size: 11px; }
+  .zone-tab { font-size: 11px; padding: 1px 9px; }
+  .field-row { gap: 6px; }
+  .stack-tag { font-size: 9px; padding: 0 5px; }
+  .stack-tag[data-short] .long { display: none; }
+  .stack-tag[data-short]::after { content: attr(data-short); }
+  .mat-mid { --card-w: 42px; --card-h: 59px; padding: 0 2px; }
+  .slot { padding: 4px; }
+  .slot-label { font-size: 11px; }
+  .emblem { width: 84px; height: 84px; border-width: 4px; padding-bottom: 8px; }
+  .letter { width: 18px; height: 23px; font-size: 15px; }
+
+  /* status, buttons and hand sit below the mat instead of floating over it */
+  .banner { position: static; width: auto; margin: 6px 8px 0; padding: 6px 10px; font-size: 13px; line-height: 1.3; border-radius: 12px; }
+  .banner .big { display: inline; font-size: 15px; margin-right: 5px; }
+  .banner br { display: none; }
+  .controls { position: static; width: auto; flex-direction: row; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 6px 8px 0; }
+  .controls:empty { display: none; }
+  .controls .btn { flex: 1 1 140px; min-height: 46px; padding: 8px 10px; font-size: 15px; }
+  .controls .muted { flex: 1 1 100%; font-size: 13px; }
   #myPlate { display: none; }
-  .hand { max-width: 100%; height: 100px; justify-content: flex-start; overflow-x: auto; overflow-y: hidden; padding-top: 30px; height: 130px; }
-  .hand .card { margin: 0 -6px; transform: translateY(26px); }
-  .hand .card:hover { transform: translateY(0) scale(1.04); margin: 0 4px; }
-  .spot-card { --card-w: 160px; --card-h: 223px; }
-  .spot-title { font-size: 36px; }
+  .hand {
+    position: static; transform: none; max-width: none; height: auto; pointer-events: auto;
+    justify-content: flex-start; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity;
+    padding: 10px 10px calc(6px + env(safe-area-inset-bottom)); gap: 0;
+  }
+  .hand .card { margin: 0 -6px 0 0; transform: none; scroll-snap-align: start; }
+  .hand .card:first-child { margin-left: auto; }
+  .hand .card:last-child { margin-right: auto; }
+  .hand .card.picked { transform: translateY(-8px); }
+
+  /* card menus and prompts slide up from the bottom */
+  .modal { place-items: end center; padding: 0; }
+  .modal-box {
+    width: 100%; max-height: 86vh; max-height: 86dvh; border-radius: 18px 18px 0 0; border-bottom: none;
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  }
+  .modal-box .opts .btn { min-height: 46px; }
   .menu-top .card { --card-w: 110px; --card-h: 156px; }
+  .spot-card { --card-w: 170px; --card-h: 237px; }
+  .spot-title { font-size: 38px; }
 }
+
+/* short phones (iPhone SE, small Androids): everything one size smaller */
+@media (max-width: 900px) and (max-height: 700px) {
+  :root { --hand-w: 64px; --hand-h: 89px; }
+  .brand { font-size: 17px; }
+  .turn-info { font-size: 12px; padding: 3px 9px; }
+  .icon-btn { width: 40px; height: 36px; font-size: 18px; }
+  .opp-row { padding: 4px 8px; }
+  .plate .avatar { width: 26px; height: 26px; border-radius: 6px; }
+  .plate .nm { font-size: 12px; }
+  .counters { font-size: 11px; }
+  .mat { grid-template-rows: minmax(70px, 1fr) auto minmax(92px, 1.3fr); padding: 5px; gap: 4px; }
+  .opp-zones { --card-w: 34px; --card-h: 48px; grid-auto-rows: minmax(70px, 1fr); }
+  .my-zone { --card-w: 50px; --card-h: 70px; }
+  .zone { padding: 16px 4px 4px; }
+  .zone-tab { font-size: 10px; }
+  .stack-tag { font-size: 8px; }
+  .mat-mid { --card-w: 34px; --card-h: 48px; }
+  .emblem { width: 66px; height: 66px; padding-bottom: 5px; }
+  .letter { width: 15px; height: 19px; font-size: 12px; }
+  .banner { padding: 5px 8px; font-size: 12px; }
+  .banner .big { font-size: 14px; }
+  .controls .btn { min-height: 42px; font-size: 14px; }
+}
+
+/* touch screens: no sticky hover lift on the hand */
+@media (hover: none) {
+  .hand .card:hover { transform: none; margin: 0 -6px 0 0; box-shadow: 0 -2px 10px rgba(0, 0, 0, .5); }
+  .hand .card.playable:hover { box-shadow: 0 0 0 3px #ffd963, 0 0 18px rgba(255, 217, 99, .6); }
+}
+
+/* phones held sideways: ask to turn upright, where the layout is designed to fit */
+.rotate-hint { display: none; }
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  #table:not(.hidden) ~ .rotate-hint {
+    display: grid; place-items: center; position: fixed; inset: 0; z-index: 80; text-align: center; padding: 24px;
+    background: rgba(12, 24, 14, .96); color: #fff; font-weight: 800; font-size: 18px;
+  }
+}
+
+.solo-mode .chat, .solo-mode .chat-form, .solo-mode #chatHead { display: none; }
+.home-sub { margin: 18px 0 4px; font-size: 15px; color: var(--gold); text-transform: uppercase; letter-spacing: .06em; }
+.solo .bots { display: flex; align-items: center; gap: 8px; font-weight: 700; flex: none; }
+.solo select { background: #0c1a11; border: 1px solid var(--line); color: var(--ink); padding: 9px 10px; border-radius: 10px; font: inherit; }
