@@ -247,13 +247,18 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
   pointer-events: none; /* only the cards themselves catch clicks, not the empty strip around them */
 }
 .hand .card { pointer-events: auto; }
+.hand { --ov-base: 28px; }
 .hand .card {
-  width: var(--hand-w); height: var(--hand-h); margin: 0 -14px; cursor: pointer; flex: none;
+  width: var(--hand-w); height: var(--hand-h); margin: 0; cursor: pointer; flex: none;
   border-radius: calc(var(--hand-w) * .045);
   transform: translateY(42px); transition: transform .18s, margin .18s, box-shadow .18s;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, .5);
 }
-.hand .card:hover { transform: translateY(-34px) scale(1.12); z-index: 5; margin: 0 8px; box-shadow: 0 16px 30px rgba(0, 0, 0, .65); }
+.hand .card + .card { margin-left: calc(-1 * var(--ov, var(--ov-base))); }
+/* mouse only: on touch screens a hover effect that moves cards makes iPhones swallow the tap */
+@media (hover: hover) and (pointer: fine) {
+  .hand .card:hover { transform: translateY(-34px) scale(1.12); z-index: 5; box-shadow: 0 16px 30px rgba(0, 0, 0, .65); }
+}
 .hand .card.playable { box-shadow: 0 0 0 3px #ffd963, 0 0 18px rgba(255, 217, 99, .6); }
 .hand .card.picked { transform: translateY(-26px); box-shadow: 0 0 0 4px var(--ok), 0 10px 20px rgba(0, 0, 0, .6); }
 .hand .card.dim { filter: grayscale(.4) brightness(.75); }
@@ -296,7 +301,8 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
   border: 1px solid rgba(255, 246, 225, .35);
   box-shadow: 0 1px 1px rgba(0, 0, 0, .5), 0 4px 10px rgba(0, 0, 0, .35);
 }
-.card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; -webkit-user-drag: none; }
+.card { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 
 .card .fallback {
   position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 6px;
@@ -435,12 +441,10 @@ table.scores tr.win td { color: var(--gold); font-weight: 800; }
   #myPlate { display: none; }
   .hand {
     position: static; transform: none; max-width: none; height: auto; pointer-events: auto;
-    justify-content: flex-start; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity;
-    padding: 10px 10px calc(6px + env(safe-area-inset-bottom)); gap: 0;
+    justify-content: center; overflow: visible;
+    padding: 12px 12px calc(6px + env(safe-area-inset-bottom)); gap: 0; --ov-base: 4px;
   }
-  .hand .card { margin: 0 -6px 0 0; transform: none; scroll-snap-align: start; }
-  .hand .card:first-child { margin-left: auto; }
-  .hand .card:last-child { margin-right: auto; }
+  .hand .card { transform: none; }
   .hand .card.picked { transform: translateY(-8px); }
 
   /* card menus and prompts slide up from the bottom */
@@ -479,11 +483,6 @@ table.scores tr.win td { color: var(--gold); font-weight: 800; }
   .controls .btn { min-height: 42px; font-size: 14px; }
 }
 
-/* touch screens: no sticky hover lift on the hand */
-@media (hover: none) {
-  .hand .card:hover { transform: none; margin: 0 -6px 0 0; box-shadow: 0 -2px 10px rgba(0, 0, 0, .5); }
-  .hand .card.playable:hover { box-shadow: 0 0 0 3px #ffd963, 0 0 18px rgba(255, 217, 99, .6); }
-}
 
 /* phones held sideways: ask to turn upright, where the layout is designed to fit */
 .rotate-hint { display: none; }

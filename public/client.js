@@ -189,7 +189,7 @@
     z.innerHTML = `<div class="zoom-wrap">${cards.map((c) => cardEl(c)).join('')}</div>`;
     z.classList.remove('hidden');
   }
-  $('#zoom').onclick = () => $('#zoom').classList.add('hidden');
+  $('#zoom').onclick = () => { if (Date.now() >= suppressClickUntil) $('#zoom').classList.add('hidden'); };
 
   function openModal(key, html) {
     if (modalKey === key) return;
@@ -355,7 +355,7 @@
     else if (targeting) {
       const o = targeting.opt;
       const what = o.target === 'player' ? 'a player' : o.target === 'stacks' ? (o.count ? `${o.count} Gub(s)` : 'stacks on your side') : 'a target';
-      html = `<span class="big">${esc(CARDS[targeting.card.key].name)}</span>${esc(o.label)}<br>Choose ${what} on the table.`;
+      html = `<span class="big">${esc(CARDS[targeting.card.key].name)}</span>${esc(o.label)}.<br>Tap ${what} glowing red on the table.`;
     } else if (pd) {
       const card = pd.card ? CARDS[pd.card.key].name : '';
       const total = pd.kind === 'merchant' || pd.kind === 'plague' ? 30000 : pd.kind === 'arrange' ? 60000 : 20000;
@@ -368,11 +368,11 @@
     } else if (view.active === me) {
       html = view.phase === 'draw' ? '<span class="big">Your turn</span>Draw a card, or skip drawing.'
         : view.phase === 'discard' ? `<span class="big">Too many cards</span>Discard down to ${view.handLimit}.`
-          : '<span class="big">Your turn</span>Click a glowing card in your hand to play it, then say "Go".';
+          : '<span class="big">Your turn</span>Tap a glowing card to play it (hold any card to look at it), then end your turn.';
     } else {
       html = `<span class="big">${esc(nameOf(view.active))}</span>${view.phase === 'draw' ? 'is deciding whether to draw…' : 'is playing…'}`;
     }
-    $('#banner').innerHTML = html;
+    $('#banner').innerHTML = html.replace(/<br>/g, '<br> '); // phones hide the line break, keep a space
   }
 
   function renderControls() {
@@ -409,7 +409,23 @@
       if (targeting && targeting.card.id === card.id) cls = 'picked';
       return cardEl(card, cls).replace('class="card', `data-hand="${card.id}" class="card`);
     }).join('');
+    fitHand();
   }
+
+  // Overlap the cards just enough that the whole hand fits on screen (no sideways scrolling,
+  // which phones can mistake for a tap or swallow taps into).
+  function fitHand() {
+    const el = $('#hand');
+    const cards = el.children;
+    if (!cards.length) return;
+    const w = cards[0].offsetWidth;
+    const n = cards.length;
+    const avail = el.clientWidth - 24;
+    const base = parseFloat(getComputedStyle(el).getPropertyValue('--ov-base')) || 6;
+    const needed = n > 1 ? (n * w - avail) / (n - 1) : 0;
+    el.style.setProperty('--ov', Math.max(base, needed) + 'px');
+  }
+  window.addEventListener('resize', () => { if (view) fitHand(); });
 
   function renderLog() {
     const el = $('#log');
@@ -476,12 +492,62 @@
       <button class="btn" data-ctl="closeModal">Close</button></div>`);
   }
 
+  // Targets that need no further choice: none needed, the only possible one, or exactly the
+  // number required. Returns null when the player still has to pick.
+  function obviousTargets(opt) {
+    if (opt.target === 'none') return [];
+    if ((opt.target === 'stack' || opt.target === 'player') && opt.targets.length === 1) return [opt.targets[0]];
+    if (opt.target === 'stacks' && opt.count && opt.targets.length === opt.count) return [...opt.targets];
+    return null;
+  }
+
   function choose(card, opt) {
     closeModal();
-    if (opt.target === 'none') { act({ type: 'play', cardId: card.id, mode: opt.mode, as: opt.as || null, targets: [] }); return; }
+    const targets = obviousTargets(opt);
+    if (targets) { act({ type: 'play', cardId: card.id, mode: opt.mode, as: opt.as || null, targets }); targeting = null; render(); return; }
     targeting = { card, opt, selected: [] };
     render();
   }
+
+  // One tap plays a card whenever there is only one way to play it; the menu only appears
+  // when there is a real choice to make.
+  function tapCard(card) {
+    const opts = card.options;
+    if (!opts.length) { zoom([card]); return; }
+    if (opts.length === 1) { choose(card, opts[0]); return; }
+    openCardMenu(card);
+  }
+
+  // Press and hold any card to see it large (so a tap can always mean "play").
+  let holdTimer = null;
+  let holdStart = null;
+  let suppressClickUntil = 0;
+  function cardsAt(target) {
+    const h = target.closest('[data-hand]');
+    if (h && view) { const c = view.hand.find((x) => x.id === h.dataset.hand); return c ? [c] : null; }
+    const st = target.closest('[data-stack]');
+    if (st && view) {
+      const owner = playerById(st.dataset.owner);
+      const s = owner && owner.field.find((x) => x.id === st.dataset.stack);
+      if (s) return s.kind === 'ring' ? [s.ring, ...s.gubs] : [s.gub, s.barricade, s.spout].filter(Boolean);
+    }
+    if (target.closest('#discardTop') && view && view.discard.length) return [...view.discard].reverse();
+    return null;
+  }
+  document.addEventListener('pointerdown', (e) => {
+    const cards = cardsAt(e.target);
+    if (!cards) return;
+    holdStart = { x: e.clientX, y: e.clientY };
+    clearTimeout(holdTimer);
+    holdTimer = setTimeout(() => { zoom(cards); suppressClickUntil = Date.now() + 700; }, 450);
+  });
+  const cancelHold = () => { clearTimeout(holdTimer); holdTimer = null; };
+  document.addEventListener('pointerup', cancelHold);
+  document.addEventListener('pointercancel', cancelHold);
+  document.addEventListener('pointermove', (e) => {
+    if (holdTimer && holdStart && Math.hypot(e.clientX - holdStart.x, e.clientY - holdStart.y) > 10) cancelHold();
+  });
+  document.addEventListener('contextmenu', (e) => { if (e.target.closest('.card')) e.preventDefault(); });
 
   function sendTargets() {
     const { card, opt, selected } = targeting;
@@ -491,6 +557,7 @@
 
   // ---------- events ----------
   document.addEventListener('click', (e) => {
+    if (Date.now() < suppressClickUntil) return; // the release that ends a press-and-hold
     const t = e.target;
     const ctl = t.closest('[data-ctl]');
     if (ctl) {
@@ -538,12 +605,11 @@
         render();
       } else if (pr && pr.kind === 'merchant') {
         act({ type: 'keep', cardId: card.id });
-      } else if (targeting) {
-        targeting = null; render();
-      } else if (card.options.length) {
-        openCardMenu(card);
+      } else if (targeting && targeting.card.id === card.id) {
+        targeting = null; render(); // tap the chosen card again to cancel
       } else {
-        zoom([card]);
+        targeting = null;
+        tapCard(card);
       }
       return;
     }
