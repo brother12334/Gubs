@@ -64,6 +64,7 @@
       const el = $('#chat');
       el.insertAdjacentHTML('beforeend', `<div><b>${esc(m.from)}:</b> ${esc(m.text)}</div>`);
       el.scrollTop = el.scrollHeight;
+      if (!$('#side').classList.contains('open')) toast(`${m.from}: ${m.text}`);
     } else if (m.t === 'kicked') {
       store.set('gubs.session', null);
       room = null; view = null;
@@ -163,15 +164,35 @@
     return `<div class="${cls} ${over}" data-stack="${s.id}" data-owner="${ownerId}">${cardEl(s.gub)}${s.barricade ? cardEl(s.barricade, 'over-barricade') : ''}${s.spout ? cardEl(s.spout, 'over-spout') : ''}${tag}</div>`;
   }
 
-  function seatEl(p) {
+  // Each player gets a Gub avatar tinted in their own colour.
+  const avatarEl = (p) => {
+    const i = view.players.findIndex((x) => x.id === p.id);
+    return `<span class="avatar" style="--hue:${(i * 67) % 360}deg"></span>`;
+  };
+
+  // Nameplate: avatar, name, cards in hand and Gubs scored.
+  function plateEl(p, extra = '') {
+    const targetable = targeting && targeting.opt.target === 'player' && targeting.opt.targets.includes(p.id);
+    const backs = Array.from({ length: Math.min(p.handCount, 8) }, (_, i) => `<span class="mini-back" style="--i:${i}"></span>`).join('');
+    return `<div class="plate ${extra} ${view.active === p.id ? 'active' : ''} ${targetable ? 'targetable' : ''}" data-player="${p.id}">
+      ${avatarEl(p)}
+      <div class="plate-info">
+        <span class="nm">${esc(p.name)}${p.id === me ? ' (you)' : ''}</span>
+        <span class="counters">
+          <span class="ctr" title="Cards in hand"><span class="mini-back"></span>${p.handCount}</span>
+          <span class="ctr score" title="Free + Protected Gubs">${p.score} Gub${p.score === 1 ? '' : 's'}</span>
+        </span>
+      </div>
+      ${extra === 'opp' ? `<div class="backs">${backs}</div>` : ''}
+    </div>`;
+  }
+
+  // A player's area on the playmat.
+  function zoneEl(p) {
     const targetable = targeting && targeting.opt.target === 'player' && targeting.opt.targets.includes(p.id);
     const field = p.field.length ? p.field.map((s) => stackEl(s, p.id)).join('') : '<span class="empty-field">No cards in play</span>';
-    return `<div class="seat ${view.active === p.id ? 'active' : ''} ${targetable ? 'targetable' : ''}" data-player="${p.id}">
-      <div class="seat-head">
-        <span class="nm">${esc(p.name)}${p.id === me ? ' (you)' : ''}</span>
-        <span class="handcount"><span class="mini-back"></span>${p.handCount}</span>
-        <span class="score" title="Free + Protected Gubs">${p.score}</span>
-      </div>
+    return `<div class="zone ${view.active === p.id ? 'active' : ''} ${targetable ? 'targetable' : ''}" data-player="${p.id}">
+      <span class="zone-tab">${esc(p.id === me ? 'Your side' : p.name)} <b>${p.score}</b></span>
       <div class="field-row">${field}</div>
     </div>`;
   }
@@ -185,9 +206,12 @@
 
     const idx = view.players.findIndex((p) => p.id === me);
     const others = idx < 0 ? view.players : [...view.players.slice(idx + 1), ...view.players.slice(0, idx)];
-    $('#opponents').innerHTML = others.map(seatEl).join('');
+    $('#opponents').innerHTML = others.map((p) => plateEl(p, 'opp')).join('');
+    $('#oppZones').style.setProperty('--n', others.length);
+    $('#oppZones').innerHTML = others.map(zoneEl).join('');
     const mine = playerById(me);
-    $('#me').innerHTML = mine ? seatEl(mine) : '<p class="muted">Spectating</p>';
+    $('#me').innerHTML = mine ? zoneEl(mine) : '<p class="muted">Spectating</p>';
+    $('#myPlate').innerHTML = mine ? plateEl(mine, 'mine') : '';
 
     $('#deckCount').textContent = view.deckCount;
     $('#discardCount').textContent = view.discardCount;
@@ -198,7 +222,37 @@
     renderControls();
     renderHand();
     renderLog();
+    renderSpotlight();
     renderModals();
+  }
+
+  // Big card + title sweep whenever a card is played, cancelled or drawn as an Event.
+  // Actions are queued so each one is seen; if play runs ahead, only the latest few are kept.
+  let spotSeq = null;
+  const spotQueue = [];
+  let spotBusy = false;
+  function renderSpotlight() {
+    const a = view.lastAction;
+    if (spotSeq === null) { spotSeq = a ? a.seq : 0; return; } // don't replay old actions on (re)connect
+    if (!a || a.seq <= spotSeq) return;
+    spotSeq = a.seq;
+    spotQueue.push(a);
+    if (spotQueue.length > 2) spotQueue.shift();
+    if (!spotBusy) nextSpotlight();
+  }
+  function nextSpotlight() {
+    const el = $('#spotlight');
+    const a = spotQueue.shift();
+    if (!a) { spotBusy = false; el.classList.remove('show'); return; }
+    spotBusy = true;
+    const who = a.actor === me ? 'You' : nameOf(a.actor);
+    el.innerHTML = `<div class="spot-card">${cardEl(a.card)}</div>
+      <div class="spot-banner"><span class="spot-who">${esc(who)}</span><span class="spot-title">${esc(a.label)}</span></div>`;
+    el.classList.remove('show');
+    void el.offsetWidth; // restart the animation
+    el.classList.add('show');
+    clearTimeout(nextSpotlight.h);
+    nextSpotlight.h = setTimeout(nextSpotlight, 1700);
   }
 
   function renderBanner() {
@@ -454,6 +508,8 @@
     try { await navigator.clipboard.writeText($('#shareLink').href); toast('Link copied!'); } catch { toast('Copy failed. Select the link instead.', true); }
   };
   $('#sideToggle').onclick = () => $('#side').classList.toggle('open');
+  $('#sideClose').onclick = () => $('#side').classList.remove('open');
+  $('#spotlight').onclick = () => { clearTimeout(nextSpotlight.h); nextSpotlight(); };
   $('#chatForm').onsubmit = (e) => {
     e.preventDefault();
     const v = $('#chatInput').value.trim();

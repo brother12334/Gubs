@@ -36,6 +36,7 @@ class Game {
     this.pending = null;
     this.result = null;
     this.version = 0;
+    this.lastAction = null; // most recent card played, cancelled or drawn as an Event (for the spotlight)
     this.setup(opts.startIndex);
   }
 
@@ -95,6 +96,10 @@ class Game {
       const at = lo + Math.floor(Math.random() * (this.deck.length - lo + 1));
       this.deck.splice(at, 0, c);
     }
+  }
+
+  spotlight(actor, card, as, label) {
+    this.lastAction = { seq: (this.lastAction ? this.lastAction.seq : 0) + 1, actor, card, as, label };
   }
 
   addLog(text) {
@@ -263,11 +268,13 @@ class Game {
       const def = CARDS[c.key];
       if (def.type === 'letter') {
         this.letters.push(c);
+        this.spotlight(p.id, c, null, `Letter ${def.name}!`);
         this.addLog(`${p.name} draws the letter ${def.name}! (${this.letters.length}/3)`);
         if (this.letters.length >= 3) { this.endGame(); return; }
         continue; // draw a replacement
       }
       if (def.type === 'event') {
+        this.spotlight(p.id, c, null, def.name);
         this.addLog(`${p.name} draws an Event: ${def.name}!`);
         this.openEvent(p, c);
         return;
@@ -296,6 +303,7 @@ class Game {
     this.takeFromHand(p, card.id);
     const play = { actor: p.id, card, as: opt.as || null, mode: opt.mode, targets };
     const desc = this.describePlay(play);
+    this.spotlight(p.id, card, play.as, CARDS[play.as || card.key].name);
     if (HAZARD_MODES.has(play.mode) || TRAP_MODES.has(play.mode)) {
       this.addLog(`${p.name} plays ${desc}`);
       this.openReaction(play);
@@ -480,6 +488,7 @@ class Game {
     const opt = this.reactCardsFor(p, pd.play).find((o) => o.cardId === msg.cardId);
     if (!opt) throw new Error("That card can't cancel this");
     const c = this.takeFromHand(p, msg.cardId);
+    this.spotlight(p.id, c, opt.as, 'Cancelled!');
     this.discard.push(c, pd.play.card);
     this.addLog(`${p.name} plays ${CARDS[c.key].name}${opt.as ? ' as ' + CARDS[opt.as].name : ''}! ${CARDS[pd.play.card.key].name} is cancelled.`);
     this.pending = null;
@@ -504,6 +513,7 @@ class Game {
     const c = p.hand.find((x) => x.id === cardId);
     if (!c || !(c.key === 'flop_boat' || c.key === 'cricket_song')) throw new Error('Not a Flop Boat');
     this.takeFromHand(p, cardId);
+    this.spotlight(p.id, c, c.key === 'cricket_song' ? 'flop_boat' : null, 'Flop Boat!');
     this.discard.push(c);
     this.insertRandom([pd.card]);
     this.addLog(`${p.name} plays ${CARDS[c.key].name}${c.key === 'cricket_song' ? ' as Flop Boat' : ''}! ${CARDS[pd.card.key].name} is shuffled back into the deck.`);
@@ -743,6 +753,7 @@ class Game {
       discard: this.discard.slice(-6),
       discardCount: this.discard.length,
       letters: this.letters,
+      lastAction: this.lastAction,
       log: this.log.slice(-80),
       result: this.result,
       handLimit: HAND_LIMIT,

@@ -14,7 +14,7 @@ const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
 };
-const BOT_DELAY_MS = Number(process.env.BOT_DELAY_MS) || 900; // pause between bot moves so humans can follow along
+const BOT_DELAY_MS = Number(process.env.BOT_DELAY_MS) || 1400; // pause between bot moves so humans can follow along
 const IDLE_TAKEOVER_MS = 45000; // a disconnected player's turn is played by a bot after this long
 const BOT_NAMES = ['Mossy', 'Pip', 'Bramble', 'Toadstool', 'Fennel', 'Nib', 'Clover', 'Sprig'];
 

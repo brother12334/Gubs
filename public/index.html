@@ -44,31 +44,38 @@
 
   <!-- Table -->
   <section id="table" class="screen hidden">
-    <header class="topbar">
-      <div class="brand">GUBS <span class="code" id="tableCode"></span></div>
-      <div id="letters" class="letters"></div>
-      <div id="turnInfo" class="turn-info"></div>
-      <button id="sideToggle" class="btn small">Log</button>
-    </header>
-    <main class="mat">
-      <div id="opponents" class="opponents"></div>
-      <div class="center">
-        <div class="pile" id="deckPile">
-          <div class="card back"><img src="cards/back.jpg" alt="Deck"></div>
-          <div class="pile-label">Deck <b id="deckCount"></b></div>
-        </div>
-        <div id="banner" class="banner"></div>
-        <div class="pile" id="discardPile">
-          <div id="discardTop" class="card empty"></div>
-          <div class="pile-label">Discard <b id="discardCount"></b></div>
+    <div class="tabletop">
+      <header class="hud-top">
+        <div class="brand">GUBS <span class="code" id="tableCode"></span></div>
+        <div id="turnInfo" class="turn-info"></div>
+        <button id="sideToggle" class="icon-btn" title="Game log &amp; chat" aria-label="Game log and chat">&#9776;</button>
+      </header>
+      <div id="opponents" class="opp-row"></div>
+      <div class="mat-wrap">
+        <div class="mat">
+          <div id="oppZones" class="opp-zones"></div>
+          <div class="mat-mid">
+            <div class="slot" id="discardPile">
+              <div id="discardTop" class="card empty"></div>
+              <span class="slot-label">Discard <b id="discardCount"></b></span>
+            </div>
+            <div class="emblem"><div id="letters" class="letters"></div></div>
+            <div class="slot" id="deckPile">
+              <div class="card back"><img src="cards/back.jpg" alt="Deck"></div>
+              <span class="slot-label">Deck <b id="deckCount"></b></span>
+            </div>
+          </div>
+          <div id="me" class="my-zone"></div>
         </div>
       </div>
-      <div id="me" class="me"></div>
+      <div id="banner" class="banner"></div>
       <div class="controls" id="controls"></div>
+      <div id="myPlate"></div>
       <div id="hand" class="hand"></div>
-    </main>
+      <div id="spotlight" class="spotlight"></div>
+    </div>
     <aside id="side" class="side">
-      <div class="side-head">Game log</div>
+      <div class="side-head">Game log <button id="sideClose" class="icon-btn small" aria-label="Close">&#10005;</button></div>
       <ol id="log" class="log"></ol>
       <div class="side-head">Chat</div>
       <div id="chat" class="chat"></div>
