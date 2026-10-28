@@ -74,30 +74,14 @@
   }
 
   // ---------- helpers ----------
-  const BOLT = '<svg viewBox="0 0 24 32" class="bolt" aria-hidden="true"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7a33a"/><stop offset="1" stop-color="#c2311b"/></linearGradient></defs><path d="M15 1 4 18h7l-4 13L21 12h-7z" fill="url(#bg)" stroke="#7a1e0e" stroke-width="1"/></svg>';
-
-  // Card faces are drawn here; only the illustration comes from an image.
   function cardEl(card, extra = '') {
     const def = card && CARDS[card.key];
     if (!def) return `<div class="card empty ${extra}"></div>`;
-    const t = def.type;
-    const art = `<div class="cf-art"><img src="cards/art/${card.key}.jpg" alt="" onerror="this.remove()"></div>`;
-    const rules = def.printed != null ? def.printed : def.text;
-    let face;
-    if (card.key === 'gub') {
-      face = `${art}<div class="cf-band"><span class="cf-gub">GUB</span></div>`;
-    } else if (t === 'letter') {
-      face = `${art}<div class="cf-band"></div><div class="cf-plaque bolt-only">${BOLT}</div>`;
-    } else {
-      const titleSize = Math.min(12, 88 / (def.name.length * 0.52)).toFixed(2);
-      const label = t === 'event' ? BOLT : esc(TYPE_LABEL[t].toUpperCase());
-      face = `<div class="cf-title" style="font-size:${titleSize}cqw">${esc(def.name)}</div>
-        <div class="cf-flavor">“${esc(def.flavor || '')}”</div>${art}
-        <div class="cf-band"></div><div class="cf-plaque">${label}</div>
-        <div class="cf-rules"><span>${esc(rules)}</span></div>`;
-    }
-    return `<div class="card face t-${t} ${card.key === 'esteemed_elder' ? 'k-elder' : ''} ${extra}" data-key="${card.key}" title="${esc(def.name)}: ${esc(def.text)}">${face}</div>`;
+    return `<div class="card ${extra}" data-key="${card.key}" title="${esc(def.name)}: ${esc(def.text)}">
+      <div class="fallback">${esc(def.name)}</div>
+      <img src="cards/${card.key}.jpg" alt="${esc(def.name)}" onerror="this.remove()"></div>`;
   }
+
   const playerById = (id) => view.players.find((p) => p.id === id);
   const nameOf = (id) => (playerById(id) || { name: '?' }).name;
 

@@ -170,93 +170,10 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
 }
 .card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* ---------- printed card face (sizes are relative to the card via container units) ---------- */
-.card.face {
-  container-type: size;
-  border: none;
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .35 0 0 0 0 .2 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
-    radial-gradient(ellipse 80% 65% at 50% 38%, #fdf9ef 0%, #f5ecd6 62%, #e9dab9 100%);
-  color: #2b1f12;
+.card .fallback {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 6px;
+  color: #3a2b10; font-family: 'IM Fell English SC', serif; font-size: 15px;
 }
-.card.face.t-event, .card.face.t-letter {
-  background:
-    radial-gradient(ellipse 75% 60% at 50% 40%, rgba(253, 249, 239, .9), rgba(253, 249, 239, 0) 70%),
-    repeating-conic-gradient(from 0deg at 50% 42%, rgba(244, 196, 140, .32) 0 6deg, transparent 6deg 12deg),
-    radial-gradient(ellipse 80% 65% at 50% 38%, #fdf6e8 0%, #f6e6c8 65%, #ecd2a6 100%);
-}
-.card.face > div { position: absolute; }
-.cf-title {
-  top: 3.4cqh; left: 3cqw; right: 3cqw; text-align: center; white-space: nowrap; text-transform: uppercase;
-  font-family: 'Smokum', 'IM Fell English SC', serif; line-height: 1; letter-spacing: .03em; color: #2a1c0f;
-}
-.cf-flavor {
-  top: 12.6cqh; left: 6cqw; right: 6cqw; text-align: center;
-  font-family: 'Kurale', Georgia, serif; font-size: 3.5cqw; line-height: 1.18; color: #3b3022;
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-}
-.cf-art {
-  top: 21cqh; bottom: 30.5cqh; left: 6cqw; right: 6cqw; display: grid; place-items: center;
-}
-.cf-art img {
-  width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply;
-  -webkit-mask-image: radial-gradient(ellipse 72% 70% at 50% 50%, #000 66%, transparent 100%);
-  mask-image: radial-gradient(ellipse 72% 70% at 50% 50%, #000 66%, transparent 100%);
-}
-.cf-band {
-  left: 0; right: 0; bottom: 0; height: 29cqh;
-  box-shadow: inset 0 .5cqw 0 rgba(0, 0, 0, .18);
-}
-.t-barricade .cf-band { background: linear-gradient(#c33a30, #9f2420); }
-.t-hazard .cf-band { background: linear-gradient(#f1c64a, #dda12a); }
-.t-trap .cf-band { background: linear-gradient(#8fbd4a, #6f9b34); }
-.t-tool .cf-band { background: linear-gradient(#8b4a9b, #6c2f7c); }
-.t-tool_hazard .cf-band { background: linear-gradient(90deg, #7d3b8c 0 50%, #e6b034 50% 100%); }
-.t-interrupt .cf-band { background: linear-gradient(#2b2724, #151311); }
-.t-wild .cf-band {
-  background:
-    radial-gradient(circle at 12% 30%, #f6d36b 0 1.1cqw, transparent 1.3cqw),
-    radial-gradient(circle at 34% 78%, #f6d36b 0 .9cqw, transparent 1.1cqw),
-    radial-gradient(circle at 63% 22%, #f6d36b 0 1cqw, transparent 1.2cqw),
-    radial-gradient(circle at 86% 70%, #f6d36b 0 1.1cqw, transparent 1.3cqw),
-    radial-gradient(circle at 50% 55%, #f6d36b 0 .7cqw, transparent .9cqw),
-    linear-gradient(#34418a, #1f285e);
-}
-.t-event .cf-band, .t-letter .cf-band {
-  background: repeating-conic-gradient(from -90deg at 50% 0%, #f39a2b 0 7deg, #f8b648 7deg 14deg);
-}
-.t-gub .cf-band { background: url('cards/leopard.jpg') center / auto 100% repeat-x, #e7cf96; }
-.card.face.t-gub:not(.k-elder) .cf-art { top: 3cqh; bottom: 25cqh; left: 4cqw; right: 4cqw; }
-.card.face.t-gub:not(.k-elder) .cf-band { height: 24cqh; display: grid; place-items: center; }
-.cf-gub {
-  font-family: 'Smokum', serif; font-size: 22cqw; line-height: 1; letter-spacing: .04em; color: #2a2018;
-  text-shadow: 0 0 1cqw rgba(255, 240, 200, .6);
-}
-.t-letter .cf-art { top: 4cqh; bottom: 27cqh; left: 6cqw; right: 6cqw; }
-.t-letter .cf-band { height: 26cqh; }
-.cf-plaque {
-  top: 66cqh; left: 17cqw; right: 17cqw; height: 9.5cqh; display: grid; place-items: center;
-  font-family: 'Smokum', serif; font-size: 6.8cqw; letter-spacing: .05em; color: #3d2808; white-space: nowrap;
-  border-radius: 2.4cqw;
-  background:
-    radial-gradient(circle at 5% 50%, #5b3d10 0 .8cqw, transparent 1cqw),
-    radial-gradient(circle at 95% 50%, #5b3d10 0 .8cqw, transparent 1cqw),
-    linear-gradient(#fbe08a, #e9b440 48%, #c98d1f 52%, #f1c55a);
-  border: .7cqw solid #7a5414;
-  box-shadow: 0 0 0 .5cqw #e7c46a, 0 .8cqw 1.4cqw rgba(0, 0, 0, .35);
-}
-.t-tool_hazard .cf-plaque { font-size: 5.6cqw; }
-.cf-plaque .bolt { height: 85%; }
-.cf-plaque.bolt-only { top: auto; bottom: 7cqh; left: 30cqw; right: 30cqw; height: 13cqh; background: none; border: none; box-shadow: none; }
-.cf-rules {
-  top: 77.5cqh; bottom: 3cqh; left: 5cqw; right: 5cqw; display: grid; place-items: center;
-  padding: 1cqw 3.5cqw; text-align: center;
-  font-family: 'Kurale', Georgia, serif; font-size: 4.6cqw; line-height: 1.15; color: #2a2116;
-  background: linear-gradient(#fbf6e9, #f1e7cf);
-  border-radius: 2.6cqw;
-  box-shadow: inset 0 0 0 .45cqw rgba(140, 104, 46, .35), 0 .4cqw 1cqw rgba(0, 0, 0, .3);
-}
-.k-elder .cf-rules { font-size: 4.3cqw; }
 .card.empty { background: rgba(255, 255, 255, .05); border: 2px dashed rgba(255, 255, 255, .15); box-shadow: none; }
 .opponents { --card-w: 64px; --card-h: 90px; }
 
@@ -361,6 +278,7 @@ table.scores tr.win td { color: var(--gold); font-weight: 800; }
   transition: transform .25s; z-index: 70; font-weight: 700; max-width: calc(100vw - 32px);
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
+.toast:not(.show) { visibility: hidden; }
 .toast.info { background: #1f3a27; border-color: var(--gold); }
 
 @media (max-width: 900px) {
