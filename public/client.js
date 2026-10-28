@@ -251,8 +251,9 @@
         <span class="stack-tag tag-trapped" data-short="${s.gubs.length} trap"><span class="long">${s.gubs.length} trapped</span></span></div>`;
     }
     const SHORT = { free: 'Free', protected: 'Prot', trapped: 'Trap' };
-    const tag = s.elder ? '<span class="stack-tag tag-elder">Elder</span>'
-      : `<span class="stack-tag tag-${s.state}" data-short="${SHORT[s.state]}"><span class="long">${s.state}</span></span>`;
+    // The Esteemed Elder is a Gub like any other on the table; the star just marks which one it is.
+    const star = s.elder ? ' ★' : '';
+    const tag = `<span class="stack-tag tag-${s.state}" data-short="${SHORT[s.state]}${star}"><span class="long">${s.state}${star}</span></span>`;
     const over = s.barricade || s.spout ? 'has-over' : '';
     return `<div class="${cls} ${over}" data-stack="${s.id}" data-owner="${ownerId}">${cardEl(s.gub)}${s.barricade ? cardEl(s.barricade, 'over-barricade') : ''}${s.spout ? cardEl(s.spout, 'over-spout') : ''}${tag}</div>`;
   }

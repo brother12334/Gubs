@@ -326,7 +326,6 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
 .tag-free { background: #e9d36a; color: #2c2200; }
 .tag-protected { background: #7ab6e8; color: #08213a; }
 .tag-trapped { background: var(--trap); color: #1a2a05; }
-.tag-elder { background: #b48ae6; color: #1e0c38; }
 .stack.targetable { cursor: crosshair; }
 .stack.targetable > .card:first-child { outline: 3px solid var(--danger); outline-offset: 2px; animation: pulse 1.1s infinite; }
 .stack.selected > .card:first-child { outline: 4px solid var(--ok); outline-offset: 2px; animation: none; }

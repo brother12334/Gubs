@@ -127,7 +127,7 @@
     stackLabel(owner, s, viewer) {
       if (viewer === owner) return this.stackLabel({ name: 'their own' }, s).replace("their own's", 'their own');
       if (s.kind === 'ring') return `${owner.name}'s ${CARDS[s.ring.key].name} (${s.gubs.length} trapped)`;
-      if (Game.isElder(s)) return `${owner.name}'s Esteemed Elder`;
+      if (Game.isElder(s)) return `${owner.name}'s Gub (the Esteemed Elder)`;
       if (s.spout) return `${owner.name}'s trapped Gub`;
       if (s.barricade) return `${owner.name}'s ${CARDS[s.barricade.key].name}-protected Gub`;
       return `${owner.name}'s Free Gub`;
