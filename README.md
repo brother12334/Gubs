@@ -52,7 +52,8 @@ The printed card guide wasn't available, so a few calls are based on the card te
 - When you draw an Event or a Letter, it takes effect and you then draw a replacement card.
 - Barricades only protect your own Free Gubs. Traps and Lures only affect Free Gubs. The Esteemed Elder can't be barricaded, trapped, lured, stolen, retreated, flooded or speared.
 - Smahl Thief steals a Gub together with its Barricade; a Sud Spout on it is discarded, so the Gub arrives Free.
-- Retreat takes any or all cards on your side back into your hand, including Sud Spouts opponents played there and your Rings with their Gubs.
+- Rings trap Gubs where they are: a ringed Gub stays on its owner's side (scoring nothing) until a Haki Flute breaks the Ring and wins all its Gubs.
+- Retreat takes any or all cards on your side back into your hand, including Sud Spouts opponents played there; Gubs held by a Ring can't be retreated.
 - Traveling Merchant: each player keeps one card and passes the rest to the player on their right, the previous player in turn order.
 - Letters count as Events: Flop Boat can send one back into the deck, even the third, so the game goes on.
 - Interrupts can't be interrupted.

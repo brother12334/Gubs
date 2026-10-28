@@ -32,6 +32,7 @@
       this.deck = [];
       this.discard = [];
       this.letters = [];
+      this.rings = []; // Rings in play: { id, card, by }
       this.log = [];
       this.turn = 0;
       this.active = 0;
@@ -89,7 +90,7 @@
       this.addLog(`Game started. ${this.players[this.active].name} goes first.`);
     }
 
-    gubStack(gub) { return { id: 's' + this.nextId++, kind: 'gub', gub, barricade: null, spout: null }; }
+    gubStack(gub) { return { id: 's' + this.nextId++, kind: 'gub', gub, barricade: null, spout: null, ring: null }; }
 
     isEventish(c) { const t = CARDS[c.key].type; return t === 'event' || t === 'letter'; }
 
@@ -118,15 +119,19 @@
     removeStack(owner, stack) { owner.field = owner.field.filter((s) => s !== stack); }
 
     static isElder(s) { return s.kind === 'gub' && s.gub.key === 'esteemed_elder'; }
-    static isFree(s) { return s.kind === 'gub' && !s.barricade && !s.spout; }
-    static isProtected(s) { return s.kind === 'gub' && !!s.barricade && !s.spout; }
-    static scores(s) { return s.kind === 'gub' && !s.spout; }
+    static isTrapped(s) { return !!(s.spout || s.ring); }
+    static isFree(s) { return s.kind === 'gub' && !s.barricade && !Game.isTrapped(s); }
+    static isProtected(s) { return s.kind === 'gub' && !!s.barricade && !Game.isTrapped(s); }
+    static scores(s) { return s.kind === 'gub' && !Game.isTrapped(s); }
+
+    // Rings stay with the Gubs they trap, on each Gub owner's side; stack.ring holds the ring's id.
+    ringCard(rid) { const r = this.rings.find((x) => x.id === rid); return r ? r.card : null; }
 
     score(p) { return p.field.filter(Game.scores).length; }
 
     stackLabel(owner, s, viewer) {
       if (viewer === owner) return this.stackLabel({ name: 'their own' }, s).replace("their own's", 'their own');
-      if (s.kind === 'ring') return `${owner.name}'s ${CARDS[s.ring.key].name} (${s.gubs.length} trapped)`;
+      if (s.ring) return `${owner.name}'s Gub trapped in a ${CARDS[this.ringCard(s.ring).key].name}`;
       if (Game.isElder(s)) return `${owner.name}'s Gub (the Esteemed Elder)`;
       if (s.spout) return `${owner.name}'s trapped Gub`;
       if (s.barricade) return `${owner.name}'s ${CARDS[s.barricade.key].name}-protected Gub`;
@@ -183,7 +188,7 @@
           if (all.some((x) => x.stack.barricade && x.stack.barricade.key === 'mushroom')) add('omen', 'Discard all Mushrooms and the Gubs behind them', 'none', []);
           break;
         case 'smahl_thief':
-          add('steal', 'Steal a Gub (with whatever is on it)', 'stack', ids(opp.filter((x) => x.stack.kind === 'gub' && !Game.isElder(x.stack))));
+          add('steal', 'Steal a Gub (with whatever is on it)', 'stack', ids(opp.filter((x) => x.stack.kind === 'gub' && !x.stack.ring && !Game.isElder(x.stack))));
           break;
         case 'lightning':
           add('smite', 'Smite the Esteemed Elder', 'stack', ids(opp.filter((x) => Game.isElder(x.stack))));
@@ -204,7 +209,7 @@
           add('spearKill', 'Hazard: kill a Free Gub', 'stack', ids(freeAny));
           break;
         case 'haki_flute':
-          add('flute', 'Shatter a Ring and win its Gubs', 'stack', ids(all.filter((x) => x.stack.kind === 'ring')));
+          add('flute', 'Shatter a Ring and win its Gubs', 'stack', ids(all.filter((x) => x.stack.ring)));
           break;
         case 'scout':
           add('scoutLook', "Look at a player's hand", 'player', oppPlayers.filter((q) => q.hand.length).map((q) => q.id));
@@ -212,7 +217,7 @@
           break;
         case 'retreat':
           add('retreat', 'Take cards on your side back into your hand', 'stacks',
-            p.field.filter((s) => !Game.isElder(s)).map((s) => s.id), { min: 1 });
+            p.field.filter((s) => !Game.isElder(s) && !s.ring).map((s) => s.id), { min: 1 });
           break;
         case 'age_old_cure':
           if (this.discard.some((c) => c.key === 'gub')) add('cure', 'Take a Gub from the discard pile', 'none', []);
@@ -412,13 +417,10 @@
           st.stack.spout = card;
           break;
         case 'ring': {
-          const gubs = [];
-          for (const id of targets) {
-            const x = this.findStack(id);
-            this.removeStack(x.owner, x.stack);
-            gubs.push(x.stack.gub);
-          }
-          p.field.push({ id: 's' + this.nextId++, kind: 'ring', ring: card, gubs });
+          // The Gubs stay where they are, trapped by the Ring.
+          const rid = 'r' + this.nextId++;
+          this.rings.push({ id: rid, card, by: p.id });
+          for (const id of targets) this.findStack(id).stack.ring = rid;
           break;
         }
         case 'spearSpout':
@@ -432,10 +434,12 @@
           discardCard();
           break;
         case 'flute':
-          this.discard.push(st.stack.ring);
-          this.removeStack(st.owner, st.stack);
-          for (const g of st.stack.gubs) p.field.push(this.gubStack(g));
-          this.addLog(`${st.stack.gubs.length} Gub(s) are freed and join ${p.name}.`);
+          const rid = st.stack.ring;
+          this.discard.push(this.ringCard(rid));
+          this.rings = this.rings.filter((r) => r.id !== rid);
+          const freed = this.allStacks().filter((x) => x.stack.ring === rid);
+          for (const x of freed) { x.stack.ring = null; this.removeStack(x.owner, x.stack); p.field.push(x.stack); }
+          this.addLog(`${freed.length} Gub(s) are freed and join ${p.name}.`);
           discardCard();
           break;
         case 'scoutLook':
@@ -449,8 +453,7 @@
         case 'retreat':
           for (const id of targets) {
             const x = this.findStack(id);
-            if (x.stack.kind === 'ring') p.hand.push(x.stack.ring, ...x.stack.gubs);
-            else p.hand.push(...[x.stack.gub, x.stack.barricade, x.stack.spout].filter(Boolean));
+            p.hand.push(...[x.stack.gub, x.stack.barricade, x.stack.spout].filter(Boolean));
             this.removeStack(p, x.stack);
           }
           discardCard();
@@ -749,10 +752,9 @@
 
     // ---------- views ----------
     publicStack(s) {
-      if (s.kind === 'ring') return { id: s.id, kind: 'ring', ring: s.ring, gubs: s.gubs };
       return {
-        id: s.id, kind: 'gub', gub: s.gub, barricade: s.barricade, spout: s.spout,
-        state: s.spout ? 'trapped' : s.barricade ? 'protected' : 'free', elder: Game.isElder(s),
+        id: s.id, kind: 'gub', gub: s.gub, barricade: s.barricade, spout: s.spout, ring: s.ring ? this.ringCard(s.ring) : null,
+        state: Game.isTrapped(s) ? 'trapped' : s.barricade ? 'protected' : 'free', elder: Game.isElder(s),
       };
     }
 

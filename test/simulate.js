@@ -7,10 +7,10 @@ const { CARDS } = require('../shared/cards');
 const TOTAL = Object.values(CARDS).reduce((n, c) => n + c.count, 0);
 
 function countCards(g) {
-  let n = g.deck.length + g.discard.length + g.letters.length;
+  let n = g.deck.length + g.discard.length + g.letters.length + g.rings.length;
   for (const p of g.players) {
     n += p.hand.length;
-    for (const s of p.field) n += s.kind === 'ring' ? 1 + s.gubs.length : 1 + !!s.barricade + !!s.spout;
+    for (const s of p.field) n += 1 + !!s.barricade + !!s.spout;
   }
   const pd = g.pending;
   if (pd && pd.kind === 'react') n += 1;

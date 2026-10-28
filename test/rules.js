@@ -54,10 +54,14 @@ const tests = {
     g.act('p0', { type: 'play', cardId: r2.id, mode: 'ring', targets: ids });
     settle(g);
     assert.strictEqual(g.score(g.player('p0')), 1);
-    assert.strictEqual(g.player('p0').field.find((s) => s.kind === 'ring').gubs.length, 2);
+    assert.strictEqual(g.player('p1').field.length, 1, 'ringed Gub stays on its owner\'s side');
+    assert.strictEqual(g.score(g.player('p1')), 0, '...but no longer scores');
+    assert.strictEqual(g.score(g.player('p2')), 0);
     const flute = give(g, 'p1', 'haki_flute'); g.active = 1;
-    g.act('p1', { type: 'play', cardId: flute.id, mode: 'flute', targets: [g.player('p0').field.find((s) => s.kind === 'ring').id] });
-    assert.strictEqual(g.score(g.player('p1')), 2);
+    g.act('p1', { type: 'play', cardId: flute.id, mode: 'flute', targets: [ids[1]] });
+    assert.strictEqual(g.score(g.player('p1')), 2, 'Haki Flute wins both Gubs on the Ring');
+    assert.strictEqual(g.player('p2').field.length, 0);
+    assert.strictEqual(g.rings.length, 0);
   },
   'Esteemed Elder is immune except to Lightning'() {
     const g = fresh(); g.phase = 'play';

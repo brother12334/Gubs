@@ -114,8 +114,10 @@
         return mine && t({ score: 40, targets: [mine.stack.id] });
       }
       case 'flute': {
-        const rings = opt.targets.map((id) => game.findStack(id)).sort((a, b) => b.stack.gubs.length - a.stack.gubs.length);
-        return t({ score: 30 * rings[0].stack.gubs.length, targets: [rings[0].stack.id] });
+        // Pick the Ring holding the most Gubs (any one of its Gubs identifies it).
+        const size = (x) => game.allStacks().filter((y) => y.stack.ring === x.stack.ring).length;
+        const best = opt.targets.map((id) => game.findStack(id)).sort((a, b) => size(b) - size(a))[0];
+        return t({ score: 30 * size(best), targets: [best.stack.id] });
       }
       case 'breakBarricade': { const s = pickStack(game, me, opt.targets); return s && t({ score: 15, targets: [s.stack.id] }); }
       case 'cyclone': {

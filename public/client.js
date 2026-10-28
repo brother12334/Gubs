@@ -60,6 +60,16 @@
     resume() {
       const saved = store.get(SOLO_KEY);
       if (!saved) return false;
+      if (!saved.rings) { // saved before Rings stayed on each Gub owner's side
+        saved.rings = [];
+        for (const p of saved.players) {
+          p.field = p.field.flatMap((st) => {
+            if (st.kind !== 'ring') return [{ ...st, ring: null }];
+            saved.rings.push({ id: st.id, card: st.ring, by: p.id });
+            return st.gubs.map((gub, i) => ({ id: st.id + '_' + i, kind: 'gub', gub, barricade: null, spout: null, ring: st.id }));
+          });
+        }
+      }
       const g = Object.assign(Object.create(Game.prototype), saved, { now: () => Date.now() });
       this.run(g);
       return true;
@@ -248,18 +258,13 @@
   function stackEl(s, ownerId) {
     const targetable = isTarget('s:' + s.id);
     const selected = targeting && targeting.selected.includes(s.id);
-    const cls = `stack ${s.kind === 'ring' ? 'ring' : ''} ${targetable ? 'targetable' : ''} ${selected ? 'selected' : ''}`;
-    if (s.kind === 'ring') {
-      const gubs = s.gubs.map((g, i) => cardEl(g, 'ringgub').replace('class="card', `style="--i:${i + 1}" class="card`)).join('');
-      return `<div class="${cls}" style="--n:${s.gubs.length}" data-stack="${s.id}" data-owner="${ownerId}">${cardEl(s.ring)}${gubs}
-        <span class="stack-tag tag-trapped" data-short="${s.gubs.length} trap"><span class="long">${s.gubs.length} trapped</span></span></div>`;
-    }
+    const cls = `stack ${targetable ? 'targetable' : ''} ${selected ? 'selected' : ''}`;
     const SHORT = { free: 'Free', protected: 'Prot', trapped: 'Trap' };
     // The Esteemed Elder is a Gub like any other on the table; the star just marks which one it is.
     const star = s.elder ? ' ★' : '';
     const tag = `<span class="stack-tag tag-${s.state}" data-short="${SHORT[s.state]}${star}"><span class="long">${s.state}${star}</span></span>`;
-    const over = s.barricade || s.spout ? 'has-over' : '';
-    return `<div class="${cls} ${over}" data-stack="${s.id}" data-owner="${ownerId}">${cardEl(s.gub)}${s.barricade ? cardEl(s.barricade, 'over-barricade') : ''}${s.spout ? cardEl(s.spout, 'over-spout') : ''}${tag}</div>`;
+    const over = s.barricade || s.spout || s.ring ? 'has-over' : '';
+    return `<div class="${cls} ${over}" data-stack="${s.id}" data-owner="${ownerId}">${cardEl(s.gub)}${s.barricade ? cardEl(s.barricade, 'over-barricade') : ''}${s.spout ? cardEl(s.spout, 'over-spout') : ''}${s.ring ? cardEl(s.ring, 'over-spout') : ''}${tag}</div>`;
   }
 
   // Each player gets a Gub avatar tinted in their own colour.
@@ -581,7 +586,7 @@
     if (st && view) {
       const owner = playerById(st.dataset.owner);
       const s = owner && owner.field.find((x) => x.id === st.dataset.stack);
-      if (s) return s.kind === 'ring' ? [s.ring, ...s.gubs] : [s.gub, s.barricade, s.spout].filter(Boolean);
+      if (s) return [s.gub, s.barricade, s.spout, s.ring].filter(Boolean);
     }
     if (target.closest('#discardTop') && view && view.discard.length) return [...view.discard].reverse();
     return null;
@@ -667,7 +672,7 @@
       if (targeting && isTarget('p:' + stack.dataset.owner)) { tapTarget('p:' + stack.dataset.owner); return; }
       const owner = playerById(stack.dataset.owner);
       const s = owner && owner.field.find((x) => x.id === id);
-      if (s) zoom(s.kind === 'ring' ? [s.ring, ...s.gubs] : [s.gub, s.barricade, s.spout].filter(Boolean));
+      if (s) zoom([s.gub, s.barricade, s.spout, s.ring].filter(Boolean));
       return;
     }
     const seat = t.closest('[data-player]');
