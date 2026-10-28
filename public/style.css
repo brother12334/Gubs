@@ -216,10 +216,10 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
 .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; min-height: 42px; }
 .hand {
   display: flex; justify-content: center; align-items: flex-end; flex-wrap: nowrap;
-  padding: 22px 8px 6px; min-height: calc(var(--hand-h) + 28px); overflow-x: auto; overflow-y: visible;
+  padding: 40px 12px 8px; min-height: calc(var(--hand-h) + 48px); overflow-x: auto; overflow-y: hidden;
   /* keep the whole hand on screen, like cards held at the table edge */
   position: sticky; bottom: -16px; z-index: 6; margin: 0 -16px -16px;
-  background: linear-gradient(to bottom, transparent, rgba(8, 18, 11, .85) 30%);
+  background: linear-gradient(to bottom, transparent, rgba(8, 18, 11, .85) 45%);
 }
 .hand .card {
   border-radius: calc(var(--hand-w) * .045);
