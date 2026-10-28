@@ -153,7 +153,7 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
 .seat-head .nm { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .score { background: var(--gold); color: #261a00; border-radius: 99px; padding: 1px 9px; font-weight: 900; font-size: 13px; }
 .handcount { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 13px; }
-.mini-back { width: 12px; height: 17px; background: url('cards/back.jpg') center / cover; border: 1px solid rgba(255, 255, 255, .4); }
+.mini-back { width: 12px; height: 17px; border-radius: 1.5px; background: url('cards/back.jpg') center / cover; border: 1px solid rgba(255, 255, 255, .4); }
 .field-row { display: flex; flex-wrap: wrap; gap: 8px; min-height: calc(var(--card-h) * .62); }
 .empty-field { color: rgba(255, 255, 255, .3); font-size: 13px; align-self: center; font-style: italic; }
 
@@ -161,8 +161,9 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
 .card {
   width: var(--card-w); height: var(--card-h); position: relative; flex: none; overflow: hidden;
   background: #f5ead2;
-  /* square-cut card stock: thin dark edge plus a tight contact shadow */
-  border: 1px solid rgba(40, 28, 10, .55);
+  /* corner radius matches the printed cards (about 4.5% of the card width) */
+  border-radius: calc(var(--card-w) * .045);
+  border: 1px solid rgba(255, 246, 225, .35);
   box-shadow: 0 1px 1px rgba(0, 0, 0, .5), 0 4px 10px rgba(0, 0, 0, .35);
 }
 .card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -221,6 +222,7 @@ h2 { font-family: 'IM Fell English SC', serif; font-size: 30px; margin: 0 0 8px;
   background: linear-gradient(to bottom, transparent, rgba(8, 18, 11, .85) 30%);
 }
 .hand .card {
+  border-radius: calc(var(--hand-w) * .045);
   width: var(--hand-w); height: var(--hand-h); margin: 0 -8px; cursor: pointer;
   transition: transform .15s, margin .15s, box-shadow .15s;
 }
