@@ -7,7 +7,7 @@ Play it in the browser with 2-6 players: friends, bots, or both.
 - A server enforces the full rules: all 70 cards, Interrupts on other players' turns, Events, Letters and tiebreaks
 - Interrupt windows: when someone plays a Hazard or Trap, anyone holding a Feather, Blindfold or Cricket Song gets a prompt to cancel it. Flop Boat and Age-Old Cure prompts appear when Events are drawn.
 - Reconnects automatically if you refresh. If a player stays disconnected, a bot plays their turns until they return.
-- 3D tabletop: a playmat on a wooden table, player nameplates, and a big spotlight whenever a card is played
+- 3D tabletop: cards lie on an autumn forest floor (a pre-rendered 3D view in public/bg/), with player nameplates and a spotlight whenever a card is played
 - Bots-only mode that runs entirely in the browser (works on GitHub Pages)
 - No menus: tap a card, then tap what it should hit (a Gub, a player, the deck or the discard pile); tap your Feather or Flop Boat itself to stop an attack
 - Phone layout with big tap targets; can be added to the home screen
